@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Car {
+  id           String    @id @default(cuid())
+  make         String
+  model        String
+  year         Int
+  category     String // ECONOMY | SEDAN | SUV | PREMIUM | ELECTRIC
+  seats        Int       @default(5)
+  transmission String    @default("Automatic")
+  fuel         String    @default("Gasoline")
+  dailyRate    Float
+  deposit      Float     @default(500)
+  imageUrl     String? // cover photo (card + hero)
+  images       String    @default("") // comma-separated gallery photos (different angles)
+  features     String    @default("") // comma-separated
+  isAvailable  Boolean   @default(true)
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  bookings     Booking[]
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  car           Car      @relation(fields: [carId], references: [id])
+  carId         String
+  fullName      String
+  phone         String
+  email         String
+  licenseNumber String?
+  startDate     DateTime
+  endDate       DateTime
+  days          Int
+  dailyRate     Float // rate locked at booking time
+  totalPrice    Float
+  status        String   @default("NEW") // NEW | CONFIRMED | ACTIVE | COMPLETED | CANCELLED
+  message       String?
+  adminNotes    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  name      String
+  vehicle   String? // which car they rented, shown under the name
+  rating    Int      @default(5)
+  text      String
+  isVisible Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}

@@ -1,26 +1,465 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-bg: #05070d;
+  --color-surface: #0b111d;
+  --color-raised: #111a2c;
+  --color-line: #1c2740;
+  --color-accent: #2f6bff;
+  --color-accent-bright: #5b8cff;
+  --color-accent-dim: #16264d;
+  --color-fg: #eef2f9;
+  --color-muted: #93a0b8;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-gold: #d9b676;
+
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* The Apex wordmark/logo lockup uses Space Grotesk (only place it's used). */
+.font-wordmark {
+  font-family: var(--font-wordmark), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Car-card photo base fade — seats the photo into the card. Strong on dark,
+   very gentle on light so it doesn't wash out the vehicle. */
+.card-media-fade {
+  background: linear-gradient(
+    to top,
+    var(--color-surface),
+    color-mix(in srgb, var(--color-surface) 55%, transparent) 45%,
+    transparent
+  );
+}
+:root[data-theme="light"] .card-media-fade {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-surface) 45%, transparent),
+    transparent 42%
+  );
+}
+
+/* Promo popover: smooth slide-down on open (transform only, so the popover is
+   always fully opaque even on the first frame — never stuck invisible) */
+@keyframes promoPop {
+  from {
+    transform: translateY(-8px) scale(0.98);
   }
+  to {
+    transform: none;
+  }
+}
+.promo-pop {
+  /* visible by default; the keyframe is only an entrance flourish (no fill
+     mode) so the popover is never stuck invisible if animation doesn't run */
+  animation: promoPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- light theme (opt-in via data-theme="light") ---------- */
+:root[data-theme="light"] {
+  --color-bg: #eef1f7;
+  --color-surface: #ffffff;
+  --color-raised: #eff3fa;
+  --color-line: #d9e0ec;
+  --color-accent: #2f6bff;
+  --color-accent-bright: #2456d6;
+  --color-accent-dim: #e7eeff;
+  --color-fg: #0c1524;
+  --color-muted: #5b6a83;
+  --color-gold: #9c7526;
+  --color-success: #059669;
+  --color-warning: #b45309;
+  --color-danger: #dc2626;
+  color-scheme: light;
+}
+
+/* the brand mark is a white emblem — flip it to dark on light backgrounds */
+:root[data-theme="light"] .logo-mark {
+  filter: invert(1) brightness(0.9);
+}
+
+/* buttons need a solid fill on light (the tonal glass reads too faint) */
+:root[data-theme="light"] .btn-primary {
+  background: var(--color-accent);
+  color: #ffffff;
+  border-color: transparent;
+}
+:root[data-theme="light"] .btn-primary:hover {
+  background: var(--color-accent-bright);
+  color: #ffffff;
+}
+:root[data-theme="light"] .btn-ghost {
+  border-color: rgba(12, 21, 36, 0.16);
+  color: var(--color-fg);
+  background: transparent;
+}
+:root[data-theme="light"] .btn-ghost:hover {
+  border-color: rgba(12, 21, 36, 0.36);
+  background: rgba(12, 21, 36, 0.04);
+}
+
+/* On Point logo: white variant on dark theme, black variant on light theme */
+.onpoint-on-light {
+  display: none;
+}
+:root[data-theme="light"] .onpoint-on-dark {
+  display: none;
+}
+:root[data-theme="light"] .onpoint-on-light {
+  display: inline-block;
+}
+
+/* give cards a touch of elevation on the light surface */
+:root[data-theme="light"] .card {
+  box-shadow: 0 1px 2px rgba(12, 21, 36, 0.04);
+}
+:root[data-theme="light"] input[type="date"] {
+  color-scheme: light;
+}
+
+/* ---------- hero scrims (theme-aware, gentler on light so photos stay vivid) ---------- */
+/* horizontal: fades the page colour in from the left for text legibility, but
+   clears well before the right side so the car keeps full contrast */
+.hero-scrim-x {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg) 0%,
+    var(--color-bg) 14%,
+    color-mix(in srgb, var(--color-bg) 60%, transparent) 45%,
+    transparent 75%
+  );
+}
+:root[data-theme="light"] .hero-scrim-x {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg) 0%,
+    var(--color-bg) 16%,
+    color-mix(in srgb, var(--color-bg) 45%, transparent) 44%,
+    transparent 60%
+  );
+}
+/* vertical: blends the bottom into the page (and under the search bar) */
+.hero-scrim-b {
+  background: linear-gradient(0deg, var(--color-bg) 0%, transparent 32%);
+}
+
+/* ---------- buttons (minimal, flat) ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+/* Primary — matte tonal blue, sits inside the palette (not stark white/neon). */
+.btn-primary {
+  background: rgba(47, 107, 255, 0.16);
+  color: #dde8ff;
+  border-color: rgba(91, 140, 255, 0.4);
+}
+.btn-primary:hover {
+  background: rgba(47, 107, 255, 0.28);
+  border-color: rgba(91, 140, 255, 0.7);
+  color: #f0f5ff;
+}
+.btn-primary:active {
+  background: rgba(47, 107, 255, 0.22);
+}
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+/* Ghost — hairline outline, fills faintly on hover. */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-fg);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Premium collection — warm gold accent panel */
+.premium-panel {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(217, 182, 118, 0.08), transparent 70%),
+    var(--color-surface);
+  border: 1px solid rgba(217, 182, 118, 0.22);
+  border-radius: 1.25rem;
+}
+
+/* ---------- cards (unified) ---------- */
+.card {
+  border-radius: 1rem;
+  border: 1px solid var(--color-line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 140px),
+    var(--color-surface);
+}
+.card-hover {
+  transition:
+    border-color 0.3s ease,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s ease;
+}
+.card-hover:hover {
+  border-color: rgba(91, 140, 255, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 44px -22px rgba(0, 0, 0, 0.7);
+}
+
+/* Thin gradient hairline used as a divider, like the rules in the logo */
+.hairline {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-accent) 30%,
+    var(--color-accent) 70%,
+    transparent
+  );
+  opacity: 0.55;
+}
+
+/* Radial glow behind the hero */
+.hero-glow {
+  background:
+    radial-gradient(ellipse 60% 45% at 70% 20%, rgba(47, 107, 255, 0.16), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 20% 85%, rgba(47, 107, 255, 0.08), transparent 70%);
+}
+
+/* Dotted asphalt texture */
+.dots {
+  background-image: radial-gradient(rgba(147, 160, 184, 0.12) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: white;
+}
+
+/* ---------- motion ---------- */
+
+/* Scroll-reveal: elements start shifted+transparent, .is-visible animates in */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Brand logo marquee */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Fleet card rows — horizontal auto-scroll (two copies of the content) */
+.row-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.row-track {
+  display: flex;
+  width: max-content;
+  gap: 1.25rem;
+  animation: marquee 52s linear infinite;
+}
+.row-track.rev {
+  animation-direction: reverse;
+}
+.row-marquee:hover .row-track {
+  animation-play-state: paused;
+}
+
+/* Headline accent shimmer */
+@keyframes shimmer {
+  0%,
+  90%,
+  100% {
+    background-position: 200% center;
+  }
+  40%,
+  60% {
+    background-position: 0% center;
+  }
+}
+.text-shimmer {
+  background: linear-gradient(
+    110deg,
+    var(--color-accent-bright) 35%,
+    #b7ccff 50%,
+    var(--color-accent-bright) 65%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+/* Speed lines drifting through the hero */
+@keyframes speedline {
+  0% {
+    transform: translateX(-30vw) skewX(-25deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(130vw) skewX(-25deg);
+    opacity: 0;
+  }
+}
+.speedline {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  animation: speedline var(--sl-duration, 7s) linear infinite;
+  animation-delay: var(--sl-delay, 0s);
+}
+
+/* Car card hover: lift + headlight sweep */
+.car-card {
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s,
+    box-shadow 0.35s;
+}
+.car-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -18px rgba(47, 107, 255, 0.35);
+}
+.car-card .card-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(91, 140, 255, 0.14) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.car-card:hover .card-media::after {
+  transform: translateX(120%);
+}
+
+/* FAQ accordion */
+details.faq summary::-webkit-details-marker {
+  display: none;
+}
+details.faq .faq-icon {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+details.faq[open] .faq-icon {
+  transform: rotate(45deg);
+}
+details.faq .faq-body {
+  overflow: hidden;
+  interpolate-size: allow-keywords;
+}
+
+/* Hero carousel: staggered entrance for the active slide's text */
+@keyframes heroIn {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-in {
+  animation: heroIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-in-2 {
+  animation: heroIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+.hero-in-3 {
+  animation: heroIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+}
+
+/* Hero carousel: active progress dot fills over the autoplay interval */
+@keyframes dotfill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .marquee-track,
+  .row-track,
+  .text-shimmer,
+  .speedline,
+  .hero-in,
+  .hero-in-2,
+  .hero-in-3,
+  .promo-pop {
+    animation: none;
+  }
+  .speedline {
+    display: none;
+  }
+}
+
+/* Native date inputs on dark backgrounds */
+input[type="date"] {
+  color-scheme: dark;
 }

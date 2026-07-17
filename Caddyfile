@@ -1,0 +1,8 @@
+# Caddy reverse proxy with automatic HTTPS for Apex Rentals.
+# Caddy fetches & auto-renews Let's Encrypt certs once DNS points here
+# and ports 80/443 are open.
+
+apexrentalfleet.com, www.apexrentalfleet.com {
+	encode gzip zstd
+	reverse_proxy 127.0.0.1:3000
+}
