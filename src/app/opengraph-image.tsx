@@ -1,59 +1,110 @@
 import { ImageResponse } from "next/og";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { BUSINESS } from "@/lib/site";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "Apex Rentals — Car rental in New York";
 
+function asset(path: string, mime: string): string | null {
+  try {
+    const buf = readFileSync(join(process.cwd(), path));
+    return `data:${mime};base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 export default function OgImage() {
+  const mark = asset("public/apex-mark.png", "image/png");
+  const car = asset("public/images/fleet/gv70-1.jpg", "image/jpeg");
+
   return new ImageResponse(
     (
       <div
         style={{
+          position: "relative",
           width: "100%",
           height: "100%",
           display: "flex",
-          background: "#080b11",
-          padding: 26,
+          background: "#06080d",
           fontFamily: "sans-serif",
         }}
       >
-        {/* inset hairline frame */}
+        {/* car photo */}
+        {car && (
+          <img
+            src={car}
+            width={1200}
+            height={630}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: 1200,
+              height: 630,
+              objectFit: "cover",
+            }}
+          />
+        )}
+
+        {/* left-to-right darkening so the text side stays legible */}
         <div
           style={{
-            flex: 1,
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 1200,
+            height: 630,
+            display: "flex",
+            background:
+              "linear-gradient(90deg, #06080d 0%, rgba(6,8,13,0.93) 30%, rgba(6,8,13,0.58) 54%, rgba(6,8,13,0.12) 80%, rgba(6,8,13,0) 100%)",
+          }}
+        />
+        {/* gentle bottom vignette */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 1200,
+            height: 630,
+            display: "flex",
+            background:
+              "linear-gradient(0deg, rgba(6,8,13,0.60) 0%, rgba(6,8,13,0) 42%)",
+          }}
+        />
+
+        {/* content */}
+        <div
+          style={{
+            position: "relative",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            padding: "0 96px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 20,
+            height: "100%",
+            padding: "0 84px",
           }}
         >
-          {/* kicker */}
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <div style={{ width: 46, height: 2, background: "#4d7cff" }} />
-            <div
-              style={{
-                display: "flex",
-                fontSize: 22,
-                fontWeight: 600,
-                letterSpacing: 7,
-                color: "#6a7789",
-              }}
-            >
-              CAR RENTAL — NEW YORK CITY
-            </div>
-          </div>
+          {/* logo mark */}
+          {mark && (
+            <img
+              src={mark}
+              width={131}
+              height={72}
+              style={{ width: 131, height: 72, objectFit: "contain" }}
+            />
+          )}
 
-          {/* wordmark lockup */}
-          <div style={{ display: "flex", flexDirection: "column", marginTop: 36 }}>
+          {/* wordmark */}
+          <div style={{ display: "flex", flexDirection: "column", marginTop: 30 }}>
             <div
               style={{
                 display: "flex",
-                fontSize: 132,
+                fontSize: 108,
                 fontWeight: 700,
-                letterSpacing: -3,
+                letterSpacing: -2,
                 color: "#f4f7fb",
                 lineHeight: 1,
               }}
@@ -63,12 +114,12 @@ export default function OgImage() {
             <div
               style={{
                 display: "flex",
-                fontSize: 29,
+                fontSize: 25,
                 fontWeight: 500,
-                letterSpacing: 22,
-                color: "#4d7cff",
-                marginTop: 16,
-                paddingLeft: 5,
+                letterSpacing: 19,
+                color: "#6f9bff",
+                marginTop: 14,
+                paddingLeft: 4,
               }}
             >
               RENTALS
@@ -79,10 +130,10 @@ export default function OgImage() {
           <div
             style={{
               display: "flex",
-              fontSize: 33,
+              fontSize: 31,
               fontWeight: 400,
-              color: "#8792a6",
-              marginTop: 34,
+              color: "#aab4c6",
+              marginTop: 30,
             }}
           >
             {`Clean, reliable cars — ${BUSINESS.tagline.toLowerCase()}.`}
@@ -93,21 +144,21 @@ export default function OgImage() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 22,
-              marginTop: 62,
-              fontSize: 27,
+              gap: 20,
+              marginTop: 46,
+              fontSize: 26,
             }}
           >
-            <div style={{ display: "flex", fontWeight: 600, color: "#cdd5e2" }}>
+            <div style={{ display: "flex", fontWeight: 600, color: "#e6ebf3" }}>
               {BUSINESS.phone}
             </div>
-            <div style={{ display: "flex", color: "#31456e" }}>·</div>
+            <div style={{ display: "flex", color: "#6f9bff" }}>·</div>
             <div
               style={{
                 display: "flex",
                 fontWeight: 500,
                 letterSpacing: 2,
-                color: "#6a7789",
+                color: "#9aa6ba",
               }}
             >
               NY · NJ · CT · PA
