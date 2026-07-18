@@ -11,7 +11,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How does the deposit work?",
-    a: "A refundable deposit of $200–$500 depending on the vehicle, and up to $1,000 on luxury cars. It's released after we inspect the car on return. Bring it back the way you got it and there's nothing to talk about.",
+    a: "A refundable deposit of $200–$500 depending on the vehicle, and up to $1,000 on luxury cars. It's released within 3–7 business days, subject to inspection at return. Bring it back the way you got it and there's nothing to talk about.",
   },
   {
     q: "Do you deliver the car?",

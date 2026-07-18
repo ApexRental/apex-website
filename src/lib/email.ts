@@ -252,7 +252,7 @@ function clientEmailHtml(data: BookingEmailData): string {
         <tr><td style="padding:16px 30px 6px 30px;font-family:Arial,Helvetica,sans-serif;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef4ff;border-radius:10px;">
             <tr><td style="padding:14px 16px;color:#3f5a86;font-size:13px;line-height:1.6;">
-              <b style="color:#274a80;">Security deposit.</b> A refundable deposit is collected at pick-up and released after we inspect the car on return. The total above already includes all taxes &amp; fees.
+              <b style="color:#274a80;">Security deposit.</b> A refundable deposit is collected at pick-up and released within 3&ndash;7 business days, subject to inspection at return. The total above already includes all taxes &amp; fees.
             </td></tr>
           </table>
         </td></tr>

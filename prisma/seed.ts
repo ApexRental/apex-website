@@ -82,10 +82,10 @@ const settings: Record<string, string> = {
   companyName: "Apex Rentals",
   tagline: "Drive Your Journey",
   phone: "+1-646-234-4474",
-  email: "apexfleetrentalsss@gmail.com",
+  email: "customercare@apexrentalfleet.com",
   serviceArea: "New York City · New Jersey · Connecticut · Pennsylvania",
   depositNote:
-    "Refundable security deposit of $200–$500 (up to $1,000 on luxury cars), released after inspection on return.",
+    "Refundable security deposit of $200–$500 (up to $1,000 on luxury cars), released within 3–7 business days, subject to inspection at return.",
   hours: "Open 7 days · 8am–midnight",
   monthlyFrom: "1,400",
   minRentalDays: "1",
