@@ -80,11 +80,12 @@ function footer(): string {
         <span style="color:#39435a;padding:0 8px;">&middot;</span>
         <a href="${SITE_URL}/terms" style="color:#9fb4e6;text-decoration:none;font-size:12px;letter-spacing:1px;">TERMS</a>
       </div>
-      <div style="margin-top:12px;color:#6d778c;font-size:12px;line-height:1.7;">
+      <div style="margin-top:12px;color:#6d778c;font-size:12px;line-height:1.8;">
         Car rental in New York City &middot; Serving NY &middot; NJ &middot; CT &middot; PA<br/>
         <a href="tel:${TEL}" style="color:#9fb4e6;text-decoration:none;">${PHONE}</a>
         &nbsp;&middot;&nbsp;
-        <a href="${SITE_URL}" style="color:#9fb4e6;text-decoration:none;">apexrentalfleet.com</a>
+        <a href="${SITE_URL}" style="color:#9fb4e6;text-decoration:none;">apexrentalfleet.com</a><br/>
+        <a href="mailto:${REPLY_TO}" style="color:#9fb4e6;text-decoration:none;white-space:nowrap;">${REPLY_TO}</a>
       </div>
     </td></tr>`;
 }
