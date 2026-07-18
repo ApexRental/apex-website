@@ -65,7 +65,12 @@ export default function Footer({
               </a>
             </li>
             <li>
-              <a href={`mailto:${email}`} className="break-all text-muted transition-colors hover:text-fg">
+              <a
+                href={`mailto:${email}`}
+                title={email}
+                className="text-[13px] leading-snug text-muted transition-colors hover:text-fg"
+                style={{ wordBreak: "normal", overflowWrap: "anywhere" }}
+              >
                 {email}
               </a>
             </li>
