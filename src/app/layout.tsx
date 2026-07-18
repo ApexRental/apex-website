@@ -31,7 +31,7 @@ const spaceGrotesk = Space_Grotesk({
 
 const TITLE = "Apex Rentals — Car Rental in New York | Drive Your Journey";
 const DESCRIPTION =
-  "Apex Rent A Car — reliable car rentals in New York City. Sedans, SUVs and premium vehicles like the Genesis GV70 and BMW X5. Serving NY, NJ, CT and PA. Book online or call +1-646-234-4474.";
+  "Apex Rent A Car — reliable car rentals in New York City. Sedans, SUVs and premium vehicles like the Genesis GV70 and BMW X5. Serving NY, NJ, CT and PA. Book online or call +1-888-505-0836.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

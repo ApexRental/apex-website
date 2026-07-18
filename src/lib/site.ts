@@ -5,7 +5,7 @@ export const SITE_URL =
 export const BUSINESS = {
   name: "Apex Rentals",
   legalName: "Apex Rent A Car",
-  phone: "+1-646-234-4474",
+  phone: "+1-888-505-0836",
   email: "customercare@apexrentalfleet.com",
   tagline: "Drive Your Journey",
   areasServed: ["New York", "New Jersey", "Connecticut", "Pennsylvania"],

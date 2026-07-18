@@ -21,8 +21,8 @@ function getResend(): Resend | null {
   return new Resend(key);
 }
 
-const PHONE = "+1-646-234-4474";
-const TEL = "+16462344474";
+const PHONE = "+1-888-505-0836";
+const TEL = "+18885050836";
 const MARK = `${SITE_URL}/apex-mark.png`;
 // Where customer replies to the confirmation email should land (a real inbox).
 const REPLY_TO = process.env.REPLY_TO_EMAIL || "customercare@apexrentalfleet.com";

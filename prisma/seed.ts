@@ -81,7 +81,7 @@ const terms = [
 const settings: Record<string, string> = {
   companyName: "Apex Rentals",
   tagline: "Drive Your Journey",
-  phone: "+1-646-234-4474",
+  phone: "+1-888-505-0836",
   email: "customercare@apexrentalfleet.com",
   serviceArea: "New York City · New Jersey · Connecticut · Pennsylvania",
   depositNote:
