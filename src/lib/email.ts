@@ -29,6 +29,10 @@ function ref(id: string): string {
   return id.slice(-6).toUpperCase();
 }
 
+function usd(n: number): string {
+  return `$${n.toFixed(2)}`;
+}
+
 function fmtDate(s: string): string {
   const d = new Date(s);
   if (isNaN(d.getTime())) return s;
@@ -41,26 +45,34 @@ function fmtDate(s: string): string {
   });
 }
 
-/** Dark branded header with the mountain mark + wordmark. */
-function header(): string {
+/** Dark brand bar with the mountain mark + wordmark. */
+function brandBar(): string {
   return `
-    <tr><td style="background-color:#0a0e17;background:linear-gradient(180deg,#0d1424 0%,#070a12 100%);padding:30px 32px 22px 32px;text-align:center;">
-      <img src="${MARK}" alt="Apex Rentals" width="90" height="50" style="display:inline-block;width:90px;height:50px;border:0;" />
-      <div style="margin-top:12px;font-family:Arial,Helvetica,sans-serif;line-height:1;">
-        <span style="color:#ffffff;font-size:23px;font-weight:800;letter-spacing:2px;">APEX</span>
-        <span style="color:#6f9bff;font-size:23px;font-weight:600;letter-spacing:6px;padding-left:6px;">RENTALS</span>
-      </div>
-      <div style="margin-top:9px;font-family:Arial,Helvetica,sans-serif;color:#7b8598;font-size:11px;letter-spacing:3px;">CAR RENTAL &middot; NEW YORK CITY</div>
-    </td></tr>
-    <tr><td style="height:4px;line-height:4px;font-size:0;background-color:#2f6bff;background:linear-gradient(90deg,#2f6bff 0%,#6f9bff 100%);">&nbsp;</td></tr>`;
+    <tr><td style="background-color:#0a0e17;background:linear-gradient(180deg,#0d1424 0%,#080b12 100%);padding:20px 30px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="font-family:Arial,Helvetica,sans-serif;vertical-align:middle;">
+          <img src="${MARK}" alt="Apex Rentals" width="34" height="19" style="vertical-align:middle;border:0;" />
+          <span style="color:#ffffff;font-size:19px;font-weight:800;letter-spacing:1px;padding-left:9px;vertical-align:middle;">APEX</span>
+          <span style="color:#6f9bff;font-size:19px;font-weight:600;letter-spacing:5px;padding-left:5px;vertical-align:middle;">RENTALS</span>
+        </td>
+        <td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#8b95a8;font-size:11px;letter-spacing:2px;vertical-align:middle;">CAR RENTAL &middot; NYC</td>
+      </tr></table>
+    </td></tr>`;
 }
 
-/** Dark footer. */
+/** Dark footer with links. */
 function footer(): string {
   return `
-    <tr><td style="background:#0a0e17;padding:24px 32px;font-family:Arial,Helvetica,sans-serif;text-align:center;">
-      <div style="color:#ffffff;font-size:15px;font-weight:700;letter-spacing:1px;">APEX RENTALS</div>
-      <div style="margin-top:7px;color:#6d778c;font-size:12px;line-height:1.8;">
+    <tr><td style="background:#0a0e17;padding:26px 30px;font-family:Arial,Helvetica,sans-serif;text-align:center;">
+      <div style="color:#ffffff;font-size:15px;font-weight:800;letter-spacing:1px;">APEX RENTALS</div>
+      <div style="margin-top:12px;">
+        <a href="${SITE_URL}" style="color:#9fb4e6;text-decoration:none;font-size:12px;letter-spacing:1px;">CONTACT</a>
+        <span style="color:#39435a;padding:0 8px;">&middot;</span>
+        <a href="${SITE_URL}/privacy" style="color:#9fb4e6;text-decoration:none;font-size:12px;letter-spacing:1px;">PRIVACY</a>
+        <span style="color:#39435a;padding:0 8px;">&middot;</span>
+        <a href="${SITE_URL}/terms" style="color:#9fb4e6;text-decoration:none;font-size:12px;letter-spacing:1px;">TERMS</a>
+      </div>
+      <div style="margin-top:12px;color:#6d778c;font-size:12px;line-height:1.7;">
         Car rental in New York City &middot; Serving NY &middot; NJ &middot; CT &middot; PA<br/>
         <a href="tel:${TEL}" style="color:#9fb4e6;text-decoration:none;">${PHONE}</a>
         &nbsp;&middot;&nbsp;
@@ -69,112 +81,158 @@ function footer(): string {
     </td></tr>`;
 }
 
-/** One label/value line inside the summary card. */
-function line(label: string, value: string): string {
-  return `
-    <tr>
-      <td style="padding:9px 0;color:#8b95a8;font-size:13px;font-family:Arial,Helvetica,sans-serif;">${label}</td>
-      <td style="padding:9px 0;color:#1a2230;font-size:15px;font-weight:600;text-align:right;font-family:Arial,Helvetica,sans-serif;">${value}</td>
-    </tr>`;
-}
-
-/** A numbered step for the "what happens next" block. */
-function step(n: number, title: string, body: string): string {
-  return `
-    <tr><td style="padding:9px 0;font-family:Arial,Helvetica,sans-serif;">
-      <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td width="40" valign="top">
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td width="28" height="28" align="center" valign="middle" style="background:#eaf0ff;border-radius:14px;color:#2f6bff;font-size:13px;font-weight:800;">${n}</td>
-          </tr></table>
-        </td>
-        <td valign="top" style="padding-left:4px;">
-          <div style="color:#1a2230;font-size:14px;font-weight:700;">${title}</div>
-          <div style="color:#7c869a;font-size:13px;line-height:1.5;margin-top:2px;">${body}</div>
-        </td>
-      </tr></table>
-    </td></tr>`;
-}
-
-/** Full branded confirmation email for the CLIENT. */
+/** Full branded confirmation email for the CLIENT (Basis-style, light). */
 function clientEmailHtml(data: BookingEmailData): string {
   const q = computeQuote(data.dailyRate, data.days);
   const taxRows = q.lines
     .map(
       (l) => `
-                <tr>
-                  <td style="padding:6px 0;color:#8b95a8;font-size:13px;font-family:Arial,Helvetica,sans-serif;">${l.label} <span style="color:#b3bccc;">(${l.note})</span></td>
-                  <td style="padding:6px 0;color:#5b6478;font-size:14px;text-align:right;font-family:Arial,Helvetica,sans-serif;">${money(
-                    l.amount
-                  )}</td>
-                </tr>`
+        <tr>
+          <td style="padding:5px 0;color:#6b7688;font-size:13px;font-family:Arial,Helvetica,sans-serif;">${l.label} <span style="color:#a3adbe;">(${l.note})</span></td>
+          <td align="right" style="padding:5px 0;color:#2b3346;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${usd(
+            l.amount
+          )}</td>
+        </tr>`
     )
     .join("");
+
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apex Rentals</title></head>
-<body style="margin:0;padding:0;background:#eceff5;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eceff5;padding:24px 12px;">
+<body style="margin:0;padding:0;background:#eef2f7;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:24px 12px;">
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e7f0;">
 
-        ${header()}
+        ${brandBar()}
 
-        <!-- intro -->
-        <tr><td style="padding:32px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;text-align:center;">
-          <div style="display:inline-block;background:#eaf0ff;color:#2f6bff;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:7px 14px;border-radius:20px;">REQUEST RECEIVED</div>
-          <h1 style="margin:18px 0 8px 0;color:#141a24;font-size:25px;font-weight:800;">Thank you, ${data.fullName}!</h1>
-          <p style="margin:0 auto;max-width:420px;color:#5b6478;font-size:15px;line-height:1.6;">
-            We&rsquo;ve got your booking request. Our team will reach out shortly to confirm availability and finalize the details.
-          </p>
-          <p style="margin:16px 0 0 0;color:#9aa4b6;font-size:12px;letter-spacing:1px;">BOOKING REFERENCE &nbsp;<b style="color:#2f6bff;">#${ref(
-            data.id
-          )}</b></p>
+        <!-- HERO -->
+        <tr><td style="padding:22px 22px 0 22px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eaf1ff;background:linear-gradient(160deg,#e7f0ff 0%,#f4f8ff 100%);border-radius:14px;">
+            <tr><td style="padding:34px 30px;text-align:center;font-family:Arial,Helvetica,sans-serif;">
+              <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
+                <td width="58" height="58" align="center" valign="middle" style="background:#ffffff;border-radius:29px;box-shadow:0 2px 8px rgba(20,40,80,0.10);">
+                  <span style="color:#2f6bff;font-size:30px;font-weight:700;line-height:1;">&#10003;</span>
+                </td>
+              </tr></table>
+              <h1 style="margin:20px 0 0 0;color:#111826;font-size:24px;font-weight:800;">Your booking request is pending</h1>
+              <p style="margin:10px auto 0 auto;max-width:430px;color:#5c667a;font-size:14px;line-height:1.6;">
+                Vehicle availability can change quickly. We work hard to confirm bookings fast — our team will reach out shortly to lock in your dates. If we can&rsquo;t confirm, we&rsquo;ll let you know right away.
+              </p>
+            </td></tr>
+            <!-- ref + CTA -->
+            <tr><td style="padding:0 22px 24px 22px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="font-family:Arial,Helvetica,sans-serif;vertical-align:middle;">
+                  <div style="display:inline-block;background:#ffffff;border:1px solid #d5e0f5;border-radius:9px;padding:10px 16px;">
+                    <span style="color:#8b95a8;font-size:12px;">Booking Ref:</span>
+                    <span style="color:#2f6bff;font-size:14px;font-weight:800;letter-spacing:0.5px;">&nbsp;#${ref(
+                      data.id
+                    )}</span>
+                  </div>
+                </td>
+                <td align="right" style="vertical-align:middle;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" align="right"><tr>
+                    <td style="background:#2f6bff;border-radius:9px;">
+                      <a href="tel:${TEL}" style="display:inline-block;padding:12px 22px;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;text-decoration:none;border-radius:9px;">Call us</a>
+                    </td>
+                  </tr></table>
+                </td>
+              </tr></table>
+            </td></tr>
+          </table>
         </td></tr>
 
-        <!-- summary card -->
-        <tr><td style="padding:24px 32px 0 32px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-            <tr><td style="background:#f7f9fc;border:1px solid #e7ebf3;border-left:4px solid #2f6bff;border-radius:12px;padding:20px 22px;">
-              <div style="font-family:Arial,Helvetica,sans-serif;color:#9aa4b6;font-size:11px;letter-spacing:1.5px;">YOUR VEHICLE</div>
-              <div style="font-family:Arial,Helvetica,sans-serif;color:#141a24;font-size:20px;font-weight:800;margin:3px 0 12px 0;">${
-                data.car
-              }</div>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e7ebf3;">
-                ${line("Pick-up", fmtDate(data.startDate))}
-                ${line("Return", fmtDate(data.endDate))}
-                ${line("Duration", `${data.days} day${data.days > 1 ? "s" : ""}`)}
-              </table>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e7ebf3;margin-top:2px;">
+        <!-- greeting -->
+        <tr><td style="padding:26px 30px 0 30px;font-family:Arial,Helvetica,sans-serif;">
+          <p style="margin:0;color:#2b3346;font-size:15px;">Hi ${data.fullName}, here are your booking details:</p>
+        </td></tr>
+
+        <!-- RENTAL card -->
+        <tr><td style="padding:14px 30px 0 30px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e9f2;border-radius:12px;">
+            <tr><td style="padding:16px 20px;border-bottom:1px solid #eef1f6;font-family:Arial,Helvetica,sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="color:#111826;font-size:13px;font-weight:800;letter-spacing:1px;">RENTAL</td>
+                <td align="right" style="color:#2f6bff;font-size:13px;font-weight:700;">${
+                  data.days
+                } day${data.days > 1 ? "s" : ""}</td>
+              </tr></table>
+            </td></tr>
+            <tr><td style="padding:16px 20px 6px 20px;font-family:Arial,Helvetica,sans-serif;">
+              <div style="color:#111826;font-size:19px;font-weight:800;">${data.car}</div>
+            </td></tr>
+            <tr><td style="padding:6px 20px 18px 20px;font-family:Arial,Helvetica,sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td width="45%" style="vertical-align:top;">
+                  <div style="color:#8b95a8;font-size:11px;letter-spacing:1px;">PICK-UP</div>
+                  <div style="color:#1a2230;font-size:15px;font-weight:700;margin-top:3px;">${fmtDate(
+                    data.startDate
+                  )}</div>
+                </td>
+                <td width="10%" align="center" style="color:#c2ccdb;font-size:18px;vertical-align:middle;">&rarr;</td>
+                <td width="45%" align="right" style="vertical-align:top;">
+                  <div style="color:#8b95a8;font-size:11px;letter-spacing:1px;">RETURN</div>
+                  <div style="color:#1a2230;font-size:15px;font-weight:700;margin-top:3px;">${fmtDate(
+                    data.endDate
+                  )}</div>
+                </td>
+              </tr></table>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- PURCHASE SUMMARY -->
+        <tr><td style="padding:16px 30px 0 30px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f9fc;border:1px solid #e7ebf3;border-radius:12px;">
+            <tr><td style="padding:18px 20px;font-family:Arial,Helvetica,sans-serif;">
+              <div style="color:#111826;font-size:13px;font-weight:800;letter-spacing:1px;">PURCHASE SUMMARY</div>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
                 <tr>
-                  <td style="padding:9px 0 6px 0;color:#5b6478;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif;">Subtotal <span style="color:#b3bccc;font-weight:400;">(${money(
-                    data.dailyRate
-                  )} × ${data.days} day${data.days > 1 ? "s" : ""})</span></td>
-                  <td style="padding:9px 0 6px 0;color:#1a2230;font-size:15px;font-weight:600;text-align:right;font-family:Arial,Helvetica,sans-serif;">${money(
+                  <td style="padding:5px 0;color:#8b95a8;font-size:12px;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif;">FARE</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td style="padding:3px 0 8px 0;color:#2b3346;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${data.car} &middot; ${
+    data.days
+  } day${data.days > 1 ? "s" : ""}</td>
+                  <td align="right" style="padding:3px 0 8px 0;color:#2b3346;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${usd(
                     q.subtotal
                   )}</td>
                 </tr>
-                ${taxRows}
               </table>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #e7ebf3;margin-top:4px;">
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e7ebf3;margin-top:4px;padding-top:4px;">
                 <tr>
-                  <td style="padding:14px 0 2px 0;color:#141a24;font-size:15px;font-weight:800;font-family:Arial,Helvetica,sans-serif;">Total</td>
-                  <td style="padding:14px 0 2px 0;color:#2f6bff;font-size:24px;font-weight:800;text-align:right;font-family:Arial,Helvetica,sans-serif;">${money(
+                  <td style="padding:8px 0 2px 0;color:#8b95a8;font-size:12px;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif;">TAXES &amp; FEES</td>
+                  <td></td>
+                </tr>
+                ${taxRows}
+                <tr>
+                  <td style="padding:7px 0 2px 0;color:#5b6478;font-size:13px;font-weight:700;font-family:Arial,Helvetica,sans-serif;">Total taxes &amp; fees</td>
+                  <td align="right" style="padding:7px 0 2px 0;color:#2b3346;font-size:14px;font-weight:700;font-family:Arial,Helvetica,sans-serif;">${usd(
+                    q.taxTotal
+                  )}</td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #e2e7f0;margin-top:8px;">
+                <tr>
+                  <td style="padding:14px 0 0 0;color:#111826;font-size:16px;font-weight:800;font-family:Arial,Helvetica,sans-serif;">Total</td>
+                  <td align="right" style="padding:14px 0 0 0;color:#2f6bff;font-size:22px;font-weight:800;font-family:Arial,Helvetica,sans-serif;">${usd(
                     q.total
                   )}</td>
                 </tr>
               </table>
-              <div style="font-family:Arial,Helvetica,sans-serif;color:#9aa4b6;font-size:11px;line-height:1.5;margin-top:6px;">
-                Includes all taxes &amp; fees. A refundable security deposit is held separately at pick-up.
-              </div>
             </td></tr>
           </table>
         </td></tr>
 
         ${
           data.message
-            ? `<tr><td style="padding:16px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
+            ? `<tr><td style="padding:16px 30px 0 30px;font-family:Arial,Helvetica,sans-serif;">
                  <div style="background:#fbfaf5;border:1px solid #efe9d8;border-radius:10px;padding:14px 16px;color:#6b6450;font-size:14px;line-height:1.6;">
                    <span style="color:#b09b63;font-size:11px;letter-spacing:1px;">YOUR NOTE</span><br/>${data.message}
                  </div>
@@ -182,28 +240,18 @@ function clientEmailHtml(data: BookingEmailData): string {
             : ""
         }
 
-        <!-- what happens next -->
-        <tr><td style="padding:28px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
-          <div style="color:#141a24;font-size:15px;font-weight:800;letter-spacing:0.3px;">What happens next</div>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;">
-            ${step(1, "We check availability", "Our team confirms the vehicle is free for your dates.")}
-            ${step(2, "We call to confirm", "A quick call or email to finalize pick-up details and pricing.")}
-            ${step(3, "Pick up & drive", "Bring your license — we hand you the keys and you&rsquo;re off.")}
+        <!-- deposit notice -->
+        <tr><td style="padding:16px 30px 6px 30px;font-family:Arial,Helvetica,sans-serif;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef4ff;border-radius:10px;">
+            <tr><td style="padding:14px 16px;color:#3f5a86;font-size:13px;line-height:1.6;">
+              <b style="color:#274a80;">Security deposit.</b> A refundable deposit is collected at pick-up and released after we inspect the car on return. The total above already includes all taxes &amp; fees.
+            </td></tr>
           </table>
         </td></tr>
 
-        <!-- CTA -->
-        <tr><td style="padding:26px 32px 32px 32px;font-family:Arial,Helvetica,sans-serif;text-align:center;">
-          <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
-            <td style="border-radius:9px;background:#2f6bff;">
-              <a href="tel:${TEL}" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:9px;">Call us&nbsp; ${PHONE}</a>
-            </td>
-            <td width="12">&nbsp;</td>
-            <td style="border-radius:9px;border:1px solid #d4dae6;">
-              <a href="${SITE_URL}" style="display:inline-block;padding:13px 24px;color:#2f4064;font-size:15px;font-weight:700;text-decoration:none;border-radius:9px;">Visit website</a>
-            </td>
-          </tr></table>
-          <p style="margin:16px 0 0 0;color:#9aa4b6;font-size:13px;">Questions? Just reply to this email — we&rsquo;re happy to help.</p>
+        <!-- reply note -->
+        <tr><td style="padding:14px 30px 30px 30px;font-family:Arial,Helvetica,sans-serif;text-align:center;">
+          <p style="margin:0;color:#8b95a8;font-size:13px;line-height:1.6;">Questions? Just reply to this email or call <a href="tel:${TEL}" style="color:#2f6bff;text-decoration:none;">${PHONE}</a> — we&rsquo;re happy to help.</p>
         </td></tr>
 
         ${footer()}
@@ -218,38 +266,36 @@ function clientEmailHtml(data: BookingEmailData): string {
 
 /** Compact branded notification for the OWNER. */
 function ownerEmailHtml(data: BookingEmailData): string {
+  const q = computeQuote(data.dailyRate, data.days);
   const row = (label: string, value: string, strong = false) => `
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #eef1f6;color:#8b95a8;font-size:13px;">${label}</td>
-      <td style="padding:10px 0;border-bottom:1px solid #eef1f6;color:#141a24;font-size:15px;text-align:right;${
+      <td align="right" style="padding:10px 0;border-bottom:1px solid #eef1f6;color:#141a24;font-size:15px;${
         strong ? "font-weight:700;" : ""
       }">${value}</td>
     </tr>`;
-  const q = computeQuote(data.dailyRate, data.days);
   return `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#eceff5;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eceff5;padding:24px 12px;"><tr><td align="center">
+<body style="margin:0;padding:0;background:#eef2f7;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:24px 12px;"><tr><td align="center">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e7f0;font-family:Arial,Helvetica,sans-serif;">
-      ${header()}
-      <tr><td style="padding:26px 32px 6px 32px;">
+      ${brandBar()}
+      <tr><td style="padding:24px 30px 6px 30px;">
         <div style="color:#141a24;font-size:19px;font-weight:800;">New booking request <span style="color:#2f6bff;">#${ref(
           data.id
         )}</span></div>
         <div style="color:#8b95a8;font-size:13px;margin-top:2px;">Submitted via apexrentalfleet.com</div>
       </td></tr>
-      <tr><td style="padding:14px 32px 26px 32px;">
+      <tr><td style="padding:12px 30px 26px 30px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
           ${row("Vehicle", data.car, true)}
           ${row("Pick-up", fmtDate(data.startDate))}
           ${row("Return", fmtDate(data.endDate))}
           ${row("Duration", `${data.days} day${data.days > 1 ? "s" : ""}`)}
-          ${row("Subtotal", `${money(data.dailyRate)} × ${data.days} = ${money(q.subtotal)}`)}
-          ${q.lines
-            .map((l) => row(`${l.label} (${l.note})`, money(l.amount)))
-            .join("")}
-          ${row("Total", money(q.total), true)}
+          ${row("Subtotal", `${money(data.dailyRate)} × ${data.days} = ${usd(q.subtotal)}`)}
+          ${q.lines.map((l) => row(`${l.label} (${l.note})`, usd(l.amount))).join("")}
+          ${row("Total (incl. tax)", usd(q.total), true)}
           ${row("Name", data.fullName)}
           ${row(
             "Phone",

@@ -5,7 +5,7 @@ import {
   updateBookingStatusAction,
   saveBookingNotesAction,
 } from "@/lib/actions";
-import { BOOKING_STATUSES, money, dateShort } from "@/lib/format";
+import { BOOKING_STATUSES, money, dateShort, computeQuote } from "@/lib/format";
 import StatusBadge from "./StatusBadge";
 
 export type BookingItem = {
@@ -32,6 +32,10 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
   const [notes, setNotes] = useState(booking.adminNotes ?? "");
   const [notesSaved, setNotesSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  const quote = computeQuote(booking.dailyRate, booking.days);
+  // Bookings taken before taxes were introduced stored a pre-tax total.
+  const legacyPreTax = Math.abs(quote.total - booking.totalPrice) > 0.5;
 
   return (
     <li className="border-b border-line/60 last:border-b-0">
@@ -89,8 +93,31 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
             <Row k="Phone" v={<a className="text-accent-bright hover:underline" href={`tel:${booking.phone}`}>{booking.phone}</a>} />
             <Row k="Email" v={<a className="text-accent-bright hover:underline" href={`mailto:${booking.email}`}>{booking.email}</a>} />
             <Row k="License #" v={booking.licenseNumber || "—"} />
-            <Row k="Rate" v={`${money(booking.dailyRate)}/day × ${booking.days} days`} />
             {booking.message && <Row k="Message" v={booking.message} />}
+
+            {/* price breakdown */}
+            <div className="mt-3 rounded-lg border border-line/70 bg-surface/60 p-3">
+              <div className="flex items-center justify-between text-muted">
+                <span>{money(booking.dailyRate)}/day × {booking.days} days</span>
+                <span className="text-fg">{money(quote.subtotal)}</span>
+              </div>
+              {quote.lines.map((l) => (
+                <div key={l.label} className="mt-1 flex items-center justify-between text-xs text-muted/80">
+                  <span>{l.label} <span className="text-muted/50">({l.note})</span></span>
+                  <span>{money(l.amount)}</span>
+                </div>
+              ))}
+              <div className="mt-2 flex items-center justify-between border-t border-line/60 pt-2 font-medium">
+                <span>Total {legacyPreTax && <span className="text-muted/60">(with taxes)</span>}</span>
+                <span className="font-display font-bold">{money(quote.total)}</span>
+              </div>
+              {legacyPreTax && (
+                <p className="mt-1.5 text-[11px] leading-snug text-warning/80">
+                  Legacy booking — stored total {money(booking.totalPrice)} was
+                  taken before taxes. Taxes above are indicative.
+                </p>
+              )}
+            </div>
           </dl>
 
           <div>
