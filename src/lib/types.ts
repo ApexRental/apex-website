@@ -12,6 +12,7 @@ export type CarDTO = {
   imageUrl: string | null;
   images: string[];
   features: string[];
+  overbooked: boolean;
 };
 
 export type PublicSettings = {

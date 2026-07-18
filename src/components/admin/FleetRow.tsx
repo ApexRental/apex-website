@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { deleteCarAction, toggleCarAvailabilityAction } from "@/lib/actions";
+import {
+  deleteCarAction,
+  toggleCarAvailabilityAction,
+  toggleCarOverbookedAction,
+} from "@/lib/actions";
 import { money, CATEGORY_LABELS } from "@/lib/format";
 
 export type FleetItem = {
@@ -12,6 +16,7 @@ export type FleetItem = {
   dailyRate: number;
   deposit: number;
   isAvailable: boolean;
+  overbooked: boolean;
   bookingCount: number;
 };
 
@@ -30,6 +35,11 @@ export default function FleetRow({ car }: { car: FleetItem }) {
               hidden
             </span>
           )}
+          {car.overbooked && (
+            <span className="ml-2 rounded border border-warning/50 bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-warning">
+              overbooked
+            </span>
+          )}
         </p>
         <p className="mt-0.5 text-xs text-muted">
           {CATEGORY_LABELS[car.category] ?? car.category} ·{" "}
@@ -38,6 +48,18 @@ export default function FleetRow({ car }: { car: FleetItem }) {
         </p>
         {notice && <p className="mt-1 text-xs text-warning">{notice}</p>}
       </div>
+
+      <button
+        disabled={pending}
+        onClick={() => startTransition(() => toggleCarOverbookedAction(car.id))}
+        className={`rounded border px-3 py-1.5 text-xs disabled:opacity-50 ${
+          car.overbooked
+            ? "border-warning/50 bg-warning/10 text-warning hover:border-warning"
+            : "border-line text-muted hover:border-accent/50 hover:text-fg"
+        }`}
+      >
+        {car.overbooked ? "Make bookable" : "Mark overbooked"}
+      </button>
 
       <button
         disabled={pending}

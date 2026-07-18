@@ -64,6 +64,13 @@ export default function CarCard({
           {money(car.dailyRate)}
           <span className="font-medium text-white/70"> /day</span>
         </span>
+
+        {/* overbooked badge */}
+        {car.overbooked && (
+          <span className="absolute bottom-3 left-3 rounded-full border border-warning/60 bg-warning/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-black backdrop-blur-md">
+            Overbooked
+          </span>
+        )}
       </button>
 
       <div className="flex flex-1 flex-col p-5">
@@ -89,12 +96,22 @@ export default function CarCard({
           </ul>
         )}
 
-        <button
-          onClick={() => onBook(car)}
-          className="btn btn-primary mt-5 w-full py-3 text-sm"
-        >
-          Book this car
-        </button>
+        {car.overbooked ? (
+          <button
+            type="button"
+            disabled
+            className="mt-5 w-full cursor-not-allowed rounded-lg border border-line/70 py-3 text-sm font-semibold text-muted"
+          >
+            Overbooked — currently unavailable
+          </button>
+        ) : (
+          <button
+            onClick={() => onBook(car)}
+            className="btn btn-primary mt-5 w-full py-3 text-sm"
+          >
+            Book this car
+          </button>
+        )}
       </div>
     </article>
   );

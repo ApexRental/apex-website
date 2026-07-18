@@ -34,6 +34,7 @@ export default async function EditCarPage({
           imageUrl: car.imageUrl,
           images: car.images,
           isAvailable: car.isAvailable,
+          overbooked: car.overbooked,
         }}
       />
     </div>

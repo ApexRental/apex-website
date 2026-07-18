@@ -49,6 +49,7 @@ export default async function Home() {
     imageUrl: c.imageUrl,
     images: c.images ? c.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
     features: c.features ? c.features.split(",").map((f) => f.trim()).filter(Boolean) : [],
+    overbooked: c.overbooked,
   }));
 
   const reviewDtos: ReviewDTO[] = reviews.map((r) => ({

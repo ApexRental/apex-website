@@ -19,6 +19,7 @@ export type CarFormData = {
   imageUrl: string | null;
   images: string;
   isAvailable: boolean;
+  overbooked: boolean;
 };
 
 const EMPTY: CarFormData = {
@@ -35,6 +36,7 @@ const EMPTY: CarFormData = {
   imageUrl: null,
   images: "",
   isAvailable: true,
+  overbooked: false,
 };
 
 export default function CarForm({ car }: { car?: CarFormData }) {
@@ -149,6 +151,16 @@ export default function CarForm({ car }: { car?: CarFormData }) {
           className="h-4 w-4 accent-[#2f6bff]"
         />
         Visible on the website
+      </label>
+
+      <label className="flex items-center gap-2.5 text-sm">
+        <input
+          type="checkbox"
+          name="overbooked"
+          defaultChecked={data.overbooked}
+          className="h-4 w-4 accent-[#2f6bff]"
+        />
+        Overbooked — shown on the site but not bookable
       </label>
 
       {state?.error && (

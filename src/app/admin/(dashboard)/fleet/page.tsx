@@ -17,6 +17,7 @@ export default async function FleetPage() {
     dailyRate: c.dailyRate,
     deposit: c.deposit,
     isAvailable: c.isAvailable,
+    overbooked: c.overbooked,
     bookingCount: c._count.bookings,
   }));
 

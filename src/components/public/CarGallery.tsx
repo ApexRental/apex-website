@@ -153,15 +153,25 @@ export default function CarGallery({
             {money(car.dailyRate)}
             <span className="text-sm font-medium text-white/60"> /day</span>
           </span>
-          <button
-            onClick={() => {
-              onClose();
-              onBook(car);
-            }}
-            className="btn btn-primary px-6 py-3 text-sm"
-          >
-            Book this car
-          </button>
+          {car.overbooked ? (
+            <button
+              type="button"
+              disabled
+              className="cursor-not-allowed rounded-lg border border-white/25 px-6 py-3 text-sm font-semibold text-white/60"
+            >
+              Overbooked
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                onClose();
+                onBook(car);
+              }}
+              className="btn btn-primary px-6 py-3 text-sm"
+            >
+              Book this car
+            </button>
+          )}
         </div>
       </div>
     </div>

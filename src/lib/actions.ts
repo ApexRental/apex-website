@@ -181,6 +181,7 @@ export async function saveCarAction(
     .filter(Boolean)
     .join(",");
   const isAvailable = formData.get("isAvailable") === "on";
+  const overbooked = formData.get("overbooked") === "on";
   const imageUrlField = String(formData.get("imageUrl") ?? "").trim();
 
   if (!make || !model) return { ok: false, error: "Make and model are required" };
@@ -219,6 +220,7 @@ export async function saveCarAction(
     features,
     images,
     isAvailable,
+    overbooked,
     ...(imageUrl !== null || !id ? { imageUrl } : {}),
   };
 
@@ -259,6 +261,18 @@ export async function toggleCarAvailabilityAction(id: string) {
   await prisma.car.update({
     where: { id },
     data: { isAvailable: !car.isAvailable },
+  });
+  revalidatePublic();
+  revalidatePath("/admin/fleet");
+}
+
+export async function toggleCarOverbookedAction(id: string) {
+  await requireAuth();
+  const car = await prisma.car.findUnique({ where: { id } });
+  if (!car) return;
+  await prisma.car.update({
+    where: { id },
+    data: { overbooked: !car.overbooked },
   });
   revalidatePublic();
   revalidatePath("/admin/fleet");

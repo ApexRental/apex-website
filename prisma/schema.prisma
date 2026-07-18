@@ -22,6 +22,7 @@ model Car {
   images       String    @default("") // comma-separated gallery photos (different angles)
   features     String    @default("") // comma-separated
   isAvailable  Boolean   @default(true)
+  overbooked   Boolean   @default(false) // visible on the site but not bookable
   sortOrder    Int       @default(0)
   createdAt    DateTime  @default(now())
   bookings     Booking[]

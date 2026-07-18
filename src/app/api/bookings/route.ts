@@ -77,6 +77,12 @@ export async function POST(request: Request) {
       { status: 404 }
     );
   }
+  if (car.overbooked) {
+    return NextResponse.json(
+      { error: "This vehicle is fully booked right now. Please choose another or call us." },
+      { status: 409 }
+    );
+  }
 
   const days = daysBetween(start, end);
   const totalPrice = computeQuote(car.dailyRate, days).total;
