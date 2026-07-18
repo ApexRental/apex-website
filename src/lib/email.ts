@@ -24,6 +24,8 @@ function getResend(): Resend | null {
 const PHONE = "+1-646-234-4474";
 const TEL = "+16462344474";
 const MARK = `${SITE_URL}/apex-mark.png`;
+// Where customer replies to the confirmation email should land (a real inbox).
+const REPLY_TO = process.env.REPLY_TO_EMAIL || "customercare@apexrentalfleet.com";
 
 function ref(id: string): string {
   return id.slice(-6).toUpperCase();
@@ -347,6 +349,7 @@ export async function sendBookingNotifications(data: BookingEmailData) {
     resend.emails.send({
       from,
       to: data.email,
+      replyTo: REPLY_TO,
       subject: `Apex Rentals — booking request received (#${ref(data.id)})`,
       html: clientEmailHtml(data),
     })
