@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { SITE_URL } from "@/lib/site";
+import { computeQuote, money } from "@/lib/format";
 
 type BookingEmailData = {
   id: string;
@@ -10,7 +11,7 @@ type BookingEmailData = {
   startDate: string;
   endDate: string;
   days: number;
-  totalPrice: number;
+  dailyRate: number;
   message?: string | null;
 };
 
@@ -97,6 +98,18 @@ function step(n: number, title: string, body: string): string {
 
 /** Full branded confirmation email for the CLIENT. */
 function clientEmailHtml(data: BookingEmailData): string {
+  const q = computeQuote(data.dailyRate, data.days);
+  const taxRows = q.lines
+    .map(
+      (l) => `
+                <tr>
+                  <td style="padding:6px 0;color:#8b95a8;font-size:13px;font-family:Arial,Helvetica,sans-serif;">${l.label} <span style="color:#b3bccc;">(${l.note})</span></td>
+                  <td style="padding:6px 0;color:#5b6478;font-size:14px;text-align:right;font-family:Arial,Helvetica,sans-serif;">${money(
+                    l.amount
+                  )}</td>
+                </tr>`
+    )
+    .join("");
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -133,16 +146,27 @@ function clientEmailHtml(data: BookingEmailData): string {
                 ${line("Return", fmtDate(data.endDate))}
                 ${line("Duration", `${data.days} day${data.days > 1 ? "s" : ""}`)}
               </table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e7ebf3;margin-top:2px;">
+                <tr>
+                  <td style="padding:9px 0 6px 0;color:#5b6478;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif;">Subtotal <span style="color:#b3bccc;font-weight:400;">(${money(
+                    data.dailyRate
+                  )} × ${data.days} day${data.days > 1 ? "s" : ""})</span></td>
+                  <td style="padding:9px 0 6px 0;color:#1a2230;font-size:15px;font-weight:600;text-align:right;font-family:Arial,Helvetica,sans-serif;">${money(
+                    q.subtotal
+                  )}</td>
+                </tr>
+                ${taxRows}
+              </table>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #e7ebf3;margin-top:4px;">
                 <tr>
-                  <td style="padding:14px 0 2px 0;color:#5b6478;font-size:14px;font-weight:700;font-family:Arial,Helvetica,sans-serif;">Estimated total</td>
-                  <td style="padding:14px 0 2px 0;color:#2f6bff;font-size:24px;font-weight:800;text-align:right;font-family:Arial,Helvetica,sans-serif;">$${data.totalPrice.toFixed(
-                    2
+                  <td style="padding:14px 0 2px 0;color:#141a24;font-size:15px;font-weight:800;font-family:Arial,Helvetica,sans-serif;">Total</td>
+                  <td style="padding:14px 0 2px 0;color:#2f6bff;font-size:24px;font-weight:800;text-align:right;font-family:Arial,Helvetica,sans-serif;">${money(
+                    q.total
                   )}</td>
                 </tr>
               </table>
-              <div style="font-family:Arial,Helvetica,sans-serif;color:#9aa4b6;font-size:11px;line-height:1.5;margin-top:4px;">
-                Estimate for the selected dates &middot; excludes taxes &amp; fees, calculated at pick-up
+              <div style="font-family:Arial,Helvetica,sans-serif;color:#9aa4b6;font-size:11px;line-height:1.5;margin-top:6px;">
+                Includes all taxes &amp; fees. A refundable security deposit is held separately at pick-up.
               </div>
             </td></tr>
           </table>
@@ -201,6 +225,7 @@ function ownerEmailHtml(data: BookingEmailData): string {
         strong ? "font-weight:700;" : ""
       }">${value}</td>
     </tr>`;
+  const q = computeQuote(data.dailyRate, data.days);
   return `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
@@ -220,7 +245,11 @@ function ownerEmailHtml(data: BookingEmailData): string {
           ${row("Pick-up", fmtDate(data.startDate))}
           ${row("Return", fmtDate(data.endDate))}
           ${row("Duration", `${data.days} day${data.days > 1 ? "s" : ""}`)}
-          ${row("Estimated total", `$${data.totalPrice.toFixed(2)}`, true)}
+          ${row("Subtotal", `${money(data.dailyRate)} × ${data.days} = ${money(q.subtotal)}`)}
+          ${q.lines
+            .map((l) => row(`${l.label} (${l.note})`, money(l.amount)))
+            .join("")}
+          ${row("Total", money(q.total), true)}
           ${row("Name", data.fullName)}
           ${row(
             "Phone",

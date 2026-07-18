@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { daysBetween, dateShort } from "@/lib/format";
+import { daysBetween, dateShort, computeQuote } from "@/lib/format";
 import { sendBookingNotifications } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
   }
 
   const days = daysBetween(start, end);
-  const totalPrice = Math.round(days * car.dailyRate * 100) / 100;
+  const totalPrice = computeQuote(car.dailyRate, days).total;
 
   const booking = await prisma.booking.create({
     data: {
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     startDate: dateShort(start),
     endDate: dateShort(end),
     days,
-    totalPrice,
+    dailyRate: car.dailyRate,
     message: booking.message,
   }).catch((e) => console.error("[email] notification error:", e));
 

@@ -2,7 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { createBookingAction, type ActionResult } from "@/lib/actions";
-import { BOOKING_STATUSES, daysBetween, money } from "@/lib/format";
+import { BOOKING_STATUSES, daysBetween, money, computeQuote } from "@/lib/format";
 
 type CarOption = { id: string; label: string; dailyRate: number };
 
@@ -23,8 +23,7 @@ export default function NewBookingForm({ cars }: { cars: CarOption[] }) {
     const s = new Date(`${start}T00:00:00`);
     const e = new Date(`${end}T00:00:00`);
     if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e <= s) return null;
-    const days = daysBetween(s, e);
-    return { days, total: Math.round(days * rate * 100) / 100 };
+    return computeQuote(rate, daysBetween(s, e));
   }, [start, end, rate]);
 
   return (
@@ -106,17 +105,41 @@ export default function NewBookingForm({ cars }: { cars: CarOption[] }) {
         />
       </Field>
 
-      <div className="flex items-center justify-between rounded border border-line bg-raised px-4 py-3 text-sm">
-        <span className="text-muted">Estimated total</span>
-        <span className="font-display font-bold">
-          {estimate
-            ? `${money(estimate.total)} · ${estimate.days} day${estimate.days > 1 ? "s" : ""} × ${money(rate)}`
-            : "— pick dates —"}
-        </span>
+      <div className="rounded border border-line bg-raised px-4 py-3 text-sm">
+        {estimate ? (
+          <>
+            <div className="flex items-center justify-between text-muted">
+              <span>
+                {money(rate)} × {estimate.days} day{estimate.days > 1 ? "s" : ""}
+              </span>
+              <span>{money(estimate.subtotal)}</span>
+            </div>
+            {estimate.lines.map((l) => (
+              <div
+                key={l.label}
+                className="mt-1 flex items-center justify-between text-xs text-muted/80"
+              >
+                <span>
+                  {l.label} <span className="text-muted/50">({l.note})</span>
+                </span>
+                <span>{money(l.amount)}</span>
+              </div>
+            ))}
+            <div className="mt-2 flex items-center justify-between border-t border-line/60 pt-2">
+              <span className="font-medium text-fg">Total</span>
+              <span className="font-display font-bold">{money(estimate.total)}</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-between">
+            <span className="text-muted">Total</span>
+            <span className="font-display font-bold">— pick dates —</span>
+          </div>
+        )}
       </div>
       <p className="text-xs text-muted/70">
-        Estimate only — excludes taxes &amp; fees. No email is sent for manually
-        added bookings.
+        Total includes NYC &amp; NY taxes and the service charge. No email is sent
+        for manually added bookings.
       </p>
 
       {state?.error && (

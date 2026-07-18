@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CarDTO } from "@/lib/types";
-import { money, daysBetween } from "@/lib/format";
+import { money, daysBetween, computeQuote } from "@/lib/format";
 import DatePicker from "./DatePicker";
 
 type Props = {
@@ -50,7 +50,7 @@ export default function BookingModal({ car, onClose, initialDates }: Props) {
     return daysBetween(s, e);
   }, [startDate, endDate]);
 
-  const total = days * car.dailyRate;
+  const quote = days > 0 ? computeQuote(car.dailyRate, days) : null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -202,20 +202,47 @@ export default function BookingModal({ car, onClose, initialDates }: Props) {
 
               {/* price summary */}
               <div className="rounded-xl border border-line bg-raised/50 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted">
-                    {days > 0
-                      ? `${money(car.dailyRate)} × ${days} day${days > 1 ? "s" : ""}`
-                      : "Select dates for an estimate"}
-                  </span>
-                  <span className="font-display text-2xl font-extrabold">
-                    {days > 0 ? money(total) : "—"}
-                  </span>
-                </div>
-                <p className="mt-2 border-t border-line/60 pt-2 text-xs leading-relaxed text-muted/70">
-                  Estimate only — excludes taxes &amp; fees, which are calculated
-                  on the final agreement at pickup.
-                </p>
+                {quote ? (
+                  <>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted">
+                        {money(car.dailyRate)} × {days} day{days > 1 ? "s" : ""}
+                      </span>
+                      <span className="font-medium">{money(quote.subtotal)}</span>
+                    </div>
+                    <div className="mt-2 space-y-1.5 border-t border-line/60 pt-2">
+                      {quote.lines.map((l) => (
+                        <div
+                          key={l.label}
+                          className="flex items-center justify-between text-xs text-muted"
+                        >
+                          <span>
+                            {l.label}{" "}
+                            <span className="text-muted/60">({l.note})</span>
+                          </span>
+                          <span>{money(l.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between border-t border-line/60 pt-2.5">
+                      <span className="text-sm font-semibold">Total</span>
+                      <span className="font-display text-2xl font-extrabold">
+                        {money(quote.total)}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs leading-relaxed text-muted/70">
+                      Includes all taxes &amp; fees. Refundable deposit up to{" "}
+                      {money(car.deposit)} is held separately at pickup.
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted">
+                      Select dates for a price
+                    </span>
+                    <span className="font-display text-2xl font-extrabold">—</span>
+                  </div>
+                )}
               </div>
 
               {error && (

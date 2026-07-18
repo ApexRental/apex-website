@@ -15,7 +15,7 @@ import {
   isAuthenticated,
 } from "./auth";
 import { setSetting } from "./settings";
-import { BOOKING_STATUSES, daysBetween } from "./format";
+import { BOOKING_STATUSES, daysBetween, computeQuote } from "./format";
 
 async function requireAuth() {
   if (!(await isAuthenticated())) redirect("/admin/login");
@@ -130,7 +130,7 @@ export async function createBookingAction(
   if (!car) return { ok: false, error: "That vehicle no longer exists." };
 
   const days = daysBetween(start, end);
-  const totalPrice = Math.round(days * car.dailyRate * 100) / 100;
+  const totalPrice = computeQuote(car.dailyRate, days).total;
 
   await prisma.booking.create({
     data: {

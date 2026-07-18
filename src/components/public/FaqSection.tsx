@@ -7,7 +7,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How do I pay, and what's added to the daily rate?",
-    a: "We take Zelle, Cash App, cash, and credit or debit cards. Card payments add a 3% service charge, and NYC sales tax applies. The rate you see is the daily rate only — taxes and fees are added on the final agreement at pickup.",
+    a: "We take Zelle, Cash App, cash, and credit or debit cards. Your booking quote itemizes everything up front — the daily rate plus NYC sales tax (8.875%), New York rental tax (12%), and a 5.9% service charge — so the total you see is the total you pay. A refundable security deposit is held separately at pickup.",
   },
   {
     q: "How does the deposit work?",
