@@ -50,10 +50,16 @@ function brandBar(): string {
   return `
     <tr><td style="background-color:#0a0e17;background:linear-gradient(180deg,#0d1424 0%,#080b12 100%);padding:20px 30px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td style="font-family:Arial,Helvetica,sans-serif;vertical-align:middle;">
-          <img src="${MARK}" alt="Apex Rentals" width="34" height="19" style="vertical-align:middle;border:0;" />
-          <span style="color:#ffffff;font-size:19px;font-weight:800;letter-spacing:1px;padding-left:9px;vertical-align:middle;">APEX</span>
-          <span style="color:#6f9bff;font-size:19px;font-weight:600;letter-spacing:5px;padding-left:5px;vertical-align:middle;">RENTALS</span>
+        <td style="vertical-align:middle;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="vertical-align:middle;padding-right:11px;line-height:0;">
+              <img src="${MARK}" alt="Apex Rentals" width="50" height="28" style="display:block;border:0;" />
+            </td>
+            <td style="vertical-align:middle;font-family:Arial,Helvetica,sans-serif;white-space:nowrap;line-height:1;">
+              <span style="color:#ffffff;font-size:21px;font-weight:800;letter-spacing:1px;">APEX</span>
+              <span style="color:#6f9bff;font-size:21px;font-weight:600;letter-spacing:5px;padding-left:5px;">RENTALS</span>
+            </td>
+          </tr></table>
         </td>
         <td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#8b95a8;font-size:11px;letter-spacing:2px;vertical-align:middle;">CAR RENTAL &middot; NYC</td>
       </tr></table>
