@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { SITE_URL } from "@/lib/site";
 import { money, type Quote } from "@/lib/format";
 import type { PriceGroup } from "@/lib/pricing";
+import { escapeHtml } from "@/lib/html";
 
 type BookingEmailData = {
   id: string;
@@ -23,6 +24,29 @@ type BookingEmailData = {
   groups: PriceGroup[];
   message?: string | null;
 };
+
+/**
+ * Escape every free-text field (customer input, car names, tax labels) once,
+ * before it is placed into the HTML templates.
+ */
+export function escapeEmailData(data: BookingEmailData): BookingEmailData {
+  const opt = (v?: string | null) => (v ? escapeHtml(v) : v);
+  return {
+    ...data,
+    fullName: escapeHtml(data.fullName),
+    phone: escapeHtml(data.phone),
+    email: escapeHtml(data.email),
+    car: escapeHtml(data.car),
+    pickupLocation: opt(data.pickupLocation),
+    returnLocation: opt(data.returnLocation),
+    deliveryAddress: opt(data.deliveryAddress),
+    message: opt(data.message),
+    quote: {
+      ...data.quote,
+      lines: data.quote.lines.map((l) => ({ ...l, label: escapeHtml(l.label) })),
+    },
+  };
+}
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -376,6 +400,7 @@ export async function sendBookingNotifications(data: BookingEmailData) {
   }
   const from = process.env.FROM_EMAIL || "Apex Rentals <onboarding@resend.dev>";
   const notifyEmail = process.env.NOTIFY_EMAIL;
+  const safe = escapeEmailData(data);
 
   const jobs: Promise<unknown>[] = [];
 
@@ -386,7 +411,7 @@ export async function sendBookingNotifications(data: BookingEmailData) {
         to: notifyEmail,
         replyTo: data.email,
         subject: `New booking — ${data.car} · ${fmtDate(data.startDate)} (#${ref(data.id)})`,
-        html: ownerEmailHtml(data),
+        html: ownerEmailHtml(safe),
       })
     );
   }
@@ -397,7 +422,7 @@ export async function sendBookingNotifications(data: BookingEmailData) {
       to: data.email,
       replyTo: REPLY_TO,
       subject: `Apex Rentals — booking request received (#${ref(data.id)})`,
-      html: clientEmailHtml(data),
+      html: clientEmailHtml(safe),
     })
   );
 

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { nightlyRates, quoteFromNights, groupNights, rentalRangeError } from "@/lib/pricing";
 import { getRateMap } from "@/lib/rates";
 import { getSettings } from "@/lib/settings";
-import { formatTime, isValidTime, DEFAULT_TIME, todayNY } from "@/lib/booking-options";
+import { formatTime, isValidTime, DEFAULT_TIME, todayNY, isDeliveryArea } from "@/lib/booking-options";
 import { sendBookingNotifications } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
@@ -18,8 +18,9 @@ const bookingSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   pickupTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   returnTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  pickupLocation: z.string().max(80).optional(),
-  returnLocation: z.string().max(80).optional(),
+  // delivery-only: must be one of the listed NY & NJ areas
+  pickupLocation: z.string().refine(isDeliveryArea).optional(),
+  returnLocation: z.string().refine(isDeliveryArea).optional(),
   deliveryAddress: z.string().max(300).optional(),
   message: z.string().max(2000).optional(),
   company: z.string().max(200).optional(), // honeypot — must stay empty

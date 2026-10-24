@@ -102,3 +102,8 @@ export function addDays(ymd: string, n: number): string {
 export function isValidTime(v: string): boolean {
   return TIME_OPTIONS.some((t) => t.value === v);
 }
+
+/** True only for one of the listed delivery areas (exact match). */
+export function isDeliveryArea(v: string): boolean {
+  return ALL_AREAS.includes(v);
+}
