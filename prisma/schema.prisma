@@ -26,6 +26,19 @@ model Car {
   sortOrder    Int       @default(0)
   createdAt    DateTime  @default(now())
   bookings     Booking[]
+  rates        CarRate[]
+}
+
+/// Custom price for one car on one calendar day; days without a row use Car.dailyRate.
+model CarRate {
+  id        String   @id @default(cuid())
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  carId     String
+  date      DateTime @db.Date // calendar day, no time
+  price     Float // USD per day
+  updatedAt DateTime @updatedAt
+
+  @@unique([carId, date])
 }
 
 model Booking {
@@ -39,8 +52,10 @@ model Booking {
   startDate     DateTime // pickup date + time
   endDate       DateTime // return date + time
   days          Int
-  dailyRate     Float // rate locked at booking time
+  dailyRate     Float // rate locked at booking time (average per day when prices vary)
   totalPrice    Float
+  subtotal      Float? // rental before tax; null on bookings made before per-day pricing
+  rateBreakdown Json? // [{ date: "YYYY-MM-DD", price: number }, …]
   pickupLocation  String? // delivery area for pickup (e.g. "Manhattan")
   returnLocation  String? // delivery area for return
   deliveryAddress String? // exact street address for delivery/return
