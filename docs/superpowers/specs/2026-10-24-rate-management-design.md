@@ -101,7 +101,9 @@ with `dailyRate` = average.
     transaction (deleteMany + createMany).
   - `clearRatesAction({ carId, from, to, weekdays })`: deletes those rows.
   - Validation: `to ≥ from`, span ≤ 366 days, ≥ 1 weekday, price 1–10,000
-    rounded to cents, car exists; all-past selection → clear error.
+    rounded to cents, car exists; all-past selection → clear error; dates
+    more than 365 days ahead are rejected, so the site's 365-day rate window
+    always matches what the server charges.
   - Revalidate `/admin/rates` and `/`.
 
 ## Public site
