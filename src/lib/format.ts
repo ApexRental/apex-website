@@ -57,7 +57,9 @@ export function quoteFromSubtotal(subtotal: number, days: number, taxes: TaxRate
   const lines: QuoteLine[] = taxes.map((t) => ({
     label: t.label,
     note: formatPercent(t.rate),
-    amount: round2((subtotal * t.rate) / 100),
+    // percent -> the exact decimal fraction (5.9 -> 0.059, not 0.059000000000000004),
+    // so amounts round exactly as they did before taxes became editable
+    amount: round2(subtotal * Number((t.rate / 100).toFixed(10))),
   }));
   return quoteFromLines(subtotal, days, lines);
 }

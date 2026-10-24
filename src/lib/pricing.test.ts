@@ -110,3 +110,19 @@ test("rentalRangeError limits how far ahead a pickup can be", () => {
   assert.equal(rentalRangeError("2027-10-24", "2027-10-26", "2026-10-24"), null); // today + 365
   assert.equal(rentalRangeError("2027-10-25", "2027-10-26", "2026-10-24"), "Pickup can be booked up to one year ahead.");
 });
+
+test("default taxes keep the exact pre-Settings rounding (legacy bookings)", () => {
+  const OLD_RATES = [0.08875, 0.12, 0.059]; // the constants used before taxes became editable
+  for (let rate = 50; rate <= 1000; rate += 5) {
+    for (let days = 1; days <= 30; days++) {
+      const subtotal = Math.round(rate * days * 100) / 100;
+      const oldLines = OLD_RATES.map((r) => Math.round(subtotal * r * 100) / 100);
+      assert.deepEqual(computeQuote(rate, days).lines.map((l) => l.amount), oldLines, `${rate} x ${days}`);
+    }
+  }
+});
+
+test("pinned legacy examples", () => {
+  assert.deepEqual(computeQuote(60, 1).lines.map((l) => l.amount), [5.32, 7.2, 3.54]);
+  assert.equal(computeQuote(55, 1).lines[2].amount, 3.24);
+});
