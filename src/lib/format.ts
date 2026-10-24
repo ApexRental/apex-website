@@ -1,3 +1,5 @@
+import { DEFAULT_TAXES, formatPercent, type TaxRate } from "./taxes";
+
 export function money(n: number): string {
   return n.toLocaleString("en-US", {
     style: "currency",
@@ -21,16 +23,6 @@ export function daysBetween(start: Date, end: Date): number {
 
 // ---------- pricing (taxes & fees) ----------
 
-/** Taxes and fees applied on top of the rental subtotal, in display order. */
-export const TAX_LINES = [
-  { label: "NYC sales tax", note: "8.875%", rate: 0.08875 },
-  { label: "NY rental tax", note: "12%", rate: 0.12 },
-  { label: "Service charge", note: "5.9%", rate: 0.059 },
-] as const;
-
-/** Combined tax + fee rate (0.26775). */
-export const TAX_RATE_TOTAL = TAX_LINES.reduce((s, t) => s + t.rate, 0);
-
 export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
@@ -46,26 +38,33 @@ export type Quote = {
 };
 
 /**
- * Build a full price breakdown from a rental subtotal (before tax).
- * Each tax/fee line is rounded to cents; the grand total is subtotal + the
- * rounded lines, so the numbers shown always add up exactly. `dailyRate` is
- * the average per day.
+ * Quote from a subtotal and already-computed tax lines (e.g. lines stored on a
+ * booking). The grand total is subtotal + the lines, so the numbers shown
+ * always add up exactly. `dailyRate` is the average per day.
  */
-export function quoteFromSubtotal(subtotal: number, days: number): Quote {
-  const lines: QuoteLine[] = TAX_LINES.map((t) => ({
-    label: t.label,
-    note: t.note,
-    amount: round2(subtotal * t.rate),
-  }));
+export function quoteFromLines(subtotal: number, days: number, lines: QuoteLine[]): Quote {
   const taxTotal = round2(lines.reduce((s, l) => s + l.amount, 0));
   const total = round2(subtotal + taxTotal);
   const dailyRate = days > 0 ? round2(subtotal / days) : 0;
   return { dailyRate, days, subtotal, lines, taxTotal, total };
 }
 
+/**
+ * Build a full price breakdown from a rental subtotal (before tax): each tax
+ * is a percentage of the subtotal, rounded to cents per line.
+ */
+export function quoteFromSubtotal(subtotal: number, days: number, taxes: TaxRate[] = DEFAULT_TAXES): Quote {
+  const lines: QuoteLine[] = taxes.map((t) => ({
+    label: t.label,
+    note: formatPercent(t.rate),
+    amount: round2((subtotal * t.rate) / 100),
+  }));
+  return quoteFromLines(subtotal, days, lines);
+}
+
 /** Quote for a flat daily rate (every day the same price). */
-export function computeQuote(dailyRate: number, days: number): Quote {
-  return { ...quoteFromSubtotal(round2(dailyRate * days), days), dailyRate };
+export function computeQuote(dailyRate: number, days: number, taxes: TaxRate[] = DEFAULT_TAXES): Quote {
+  return { ...quoteFromSubtotal(round2(dailyRate * days), days, taxes), dailyRate };
 }
 
 export const CATEGORIES = [

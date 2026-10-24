@@ -8,6 +8,7 @@
  */
 import { addDays } from "./booking-options";
 import { quoteFromSubtotal, round2, type Quote } from "./format";
+import { DEFAULT_TAXES, type TaxRate } from "./taxes";
 
 /** Custom price per calendar day; days not in the map use the base rate. */
 export type RateMap = Record<string, number>;
@@ -44,9 +45,9 @@ export function groupNights(nights: Night[]): PriceGroup[] {
 }
 
 /** Taxed quote for a set of nights; `dailyRate` is the average per day. */
-export function quoteFromNights(nights: Night[]): Quote {
+export function quoteFromNights(nights: Night[], taxes: TaxRate[] = DEFAULT_TAXES): Quote {
   const subtotal = round2(nights.reduce((s, n) => s + n.price, 0));
-  return quoteFromSubtotal(subtotal, nights.length);
+  return quoteFromSubtotal(subtotal, nights.length, taxes);
 }
 
 /** Price to show on a car card: the average for chosen dates, else the base. */

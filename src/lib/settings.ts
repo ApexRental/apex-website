@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { DEFAULT_TAXES, parseStoredTaxes, type TaxRate } from "./taxes";
 
 export type TermItem = { title: string; body: string };
 
@@ -13,6 +14,8 @@ export type SiteSettings = {
   monthlyFrom: string;
   minRentalDays: number;
   terms: TermItem[];
+  /** Taxes & fees for new bookings (percent of the rental subtotal). */
+  taxes: TaxRate[];
 };
 
 const DEFAULTS: SiteSettings = {
@@ -26,6 +29,7 @@ const DEFAULTS: SiteSettings = {
   monthlyFrom: "1,400",
   minRentalDays: 1,
   terms: [],
+  taxes: DEFAULT_TAXES,
 };
 
 export async function getSettings(): Promise<SiteSettings> {
@@ -48,6 +52,7 @@ export async function getSettings(): Promise<SiteSettings> {
     monthlyFrom: map.monthlyFrom ?? DEFAULTS.monthlyFrom,
     minRentalDays: Number(map.minRentalDays ?? 1) || 1,
     terms,
+    taxes: parseStoredTaxes(map.taxes),
   };
 }
 

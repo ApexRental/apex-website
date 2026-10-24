@@ -9,7 +9,7 @@ import {
   expandRange,
   planRateChange,
 } from "./pricing";
-import { computeQuote } from "./format";
+import { computeQuote, quoteFromSubtotal, quoteFromLines } from "./format";
 
 test("billable days exclude the return day", () =>
   assert.deepEqual(billableDates("2026-10-27", "2026-10-30"), ["2026-10-27", "2026-10-28", "2026-10-29"]));
@@ -74,4 +74,27 @@ test("planRateChange validation", () => {
   assert.deepEqual(planRateChange({ from: "2026-10-23", to: "2026-10-25", weekdays: all, price: 99.999 }, T), { dates: ["2026-10-24", "2026-10-25"], price: 100 });
   assert.deepEqual(planRateChange({ from: "2027-10-20", to: "2027-10-30", weekdays: all, price: 100 }, T), { error: "Prices can be set up to one year ahead." });
   assert.deepEqual(planRateChange({ from: "2026-11-01", to: "2026-11-02", weekdays: all }, T), { dates: ["2026-11-01", "2026-11-02"] });
+});
+
+test("custom taxes", () => {
+  const q = quoteFromSubtotal(350, 3, [{ label: "City tax", rate: 10 }]);
+  assert.deepEqual(q.lines, [{ label: "City tax", note: "10%", amount: 35 }]);
+  assert.equal(q.taxTotal, 35);
+  assert.equal(q.total, 385);
+});
+
+test("no taxes", () => {
+  const q = quoteFromSubtotal(350, 3, []);
+  assert.deepEqual(q.lines, []);
+  assert.equal(q.total, 350);
+});
+
+test("quoteFromNights uses the given taxes", () =>
+  assert.equal(quoteFromNights(nightlyRates(100, {}, "2026-10-27", "2026-10-30"), [{ label: "City tax", rate: 10 }]).total, 330));
+
+test("quoteFromLines keeps stored lines", () => {
+  const q = quoteFromLines(350, 3, [{ label: "Old tax", note: "8%", amount: 28 }]);
+  assert.equal(q.taxTotal, 28);
+  assert.equal(q.total, 378);
+  assert.equal(q.dailyRate, 116.67);
 });
