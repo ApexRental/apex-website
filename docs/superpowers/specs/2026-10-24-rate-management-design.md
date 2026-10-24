@@ -159,3 +159,25 @@ The client never sends a price. Emails receive the quote and price groups.
 
 Ships with the pending booking redesign: `prisma db push` (new table + two
 nullable columns, safe for the live site), deploy code, restart PM2.
+
+## Addendum (2026-10-24): configurable taxes & fees
+
+Approved in chat. The three hard-coded taxes become an editable list in
+**Settings → Taxes & fees**.
+
+- **Model:** a list of `{ label, rate }`, `rate` in percent of the rental
+  subtotal, stored as the `taxes` Setting (JSON). Missing setting → the
+  current defaults (NYC sales tax 8.875%, NY rental tax 12%, Service charge
+  5.9%). An empty list is valid (no taxes).
+- **Editing:** add, remove and rename rows; 0–10 rows; name 1–40 characters
+  (trimmed); rate 0–100%, rounded to 3 decimals; admin only.
+- **Applies to every new booking** — site and admin "New booking": the
+  modal, the API, emails and the manual-booking estimate all use the saved
+  list. Each line shows its label and "(<rate>%)".
+- **History is frozen:** a booking stores its tax lines at creation
+  (`Booking.taxLines Json?`, `[{ label, note, amount }]`). Admin views use
+  the stored lines; bookings without them use the defaults (they were made
+  when the defaults applied). Changing taxes never changes an existing
+  booking.
+- The FAQ payment answer lists the current taxes from Settings instead of
+  hard-coded percentages.

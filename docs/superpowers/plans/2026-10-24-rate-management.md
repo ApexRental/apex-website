@@ -207,3 +207,89 @@ No code. Dev server via the Browser pane (`preview_start` "apex-website").
 - [ ] **Step 3: UI** — set the same dates in the hero search → the test car card shows `$116.67 /day` + "avg for your dates"; open the modal → rows `$100 × 2 days` and `$150 × 1 day`, total `$443.71`; submit → "Request sent"; DB row matches Step 2.
 - [ ] **Step 4: Admin (owner logs in to localhost admin in the pane)** — Rates page: select the test car, apply $200 to Fri–Sun of next month → those cells highlighted; Reset to base on the same range → cells back to base; a past-only range shows "All selected days are in the past."; the test booking's row shows the grouped breakdown.
 - [ ] **Step 5: Cleanup** — delete the test car's bookings, rates and the car; confirm car count and booking count equal their values before Step 1; `npm test` and `npm run build` pass; `git status` shows no stray files.
+
+---
+
+## Addendum (2026-10-24): configurable taxes — Tasks 8–9
+
+Implements the spec addendum "configurable taxes & fees". **Task 7 runs after Task 9**, as the final end-to-end check, on the deployed site.
+
+### Task 8: Tax core
+
+**Files:**
+- Create: `src/lib/taxes.ts`, `src/lib/taxes.test.ts`
+- Modify: `src/lib/format.ts` (tax-aware quotes; remove `TAX_LINES`, `TAX_RATE_TOTAL`), `src/lib/pricing.ts` (`quoteFromNights` taxes param), `src/lib/pricing.test.ts`, `src/lib/settings.ts` (`taxes` field), `prisma/schema.prisma` (`Booking.taxLines Json?`)
+
+**Interfaces:**
+- Produces (in `taxes.ts`):
+  - `type TaxRate = { label: string; rate: number }` — `rate` in percent
+  - `DEFAULT_TAXES: TaxRate[]` — NYC sales tax 8.875, NY rental tax 12, Service charge 5.9
+  - `formatPercent(rate: number): string` — `8.875 → "8.875%"`, `12 → "12%"`
+  - `validateTaxes(rows: { label: string; rate: number }[]): { taxes: TaxRate[] } | { error: string }`
+  - `parseStoredTaxes(json: string | undefined): TaxRate[]`
+  - `describeTaxes(taxes: TaxRate[]): string` — `"A (1%), B (2%) and C (3%)"`, `""` for none
+- Produces (in `format.ts`): `quoteFromSubtotal(subtotal, days, taxes: TaxRate[] = DEFAULT_TAXES)`, `computeQuote(dailyRate, days, taxes = DEFAULT_TAXES)`, `quoteFromLines(subtotal: number, days: number, lines: QuoteLine[]): Quote`
+- Produces (in `pricing.ts`): `quoteFromNights(nights, taxes = DEFAULT_TAXES)`
+- Produces: `SiteSettings.taxes: TaxRate[]`
+
+- [ ] **Step 1: Write the failing tests** — `taxes.test.ts`:
+
+```ts
+test("formatPercent", () => { assert.equal(formatPercent(8.875), "8.875%"); assert.equal(formatPercent(12), "12%"); assert.equal(formatPercent(5.9), "5.9%"); assert.equal(formatPercent(0), "0%"); });
+test("validateTaxes trims and rounds", () => assert.deepEqual(validateTaxes([{ label: "  City tax ", rate: 4.12345 }]), { taxes: [{ label: "City tax", rate: 4.123 }] }));
+test("validateTaxes allows no taxes", () => assert.deepEqual(validateTaxes([]), { taxes: [] }));
+test("validateTaxes limits", () => {
+  assert.deepEqual(validateTaxes(Array.from({ length: 11 }, () => ({ label: "x", rate: 1 }))), { error: "Up to 10 taxes." });
+  assert.deepEqual(validateTaxes([{ label: " ", rate: 1 }]), { error: "Each tax needs a name (up to 40 characters)." });
+  assert.deepEqual(validateTaxes([{ label: "x".repeat(41), rate: 1 }]), { error: "Each tax needs a name (up to 40 characters)." });
+  for (const rate of [-1, 101, Number.NaN]) assert.deepEqual(validateTaxes([{ label: "x", rate }]), { error: "Each rate must be between 0% and 100%." });
+});
+test("parseStoredTaxes", () => {
+  assert.deepEqual(parseStoredTaxes(undefined), DEFAULT_TAXES);
+  assert.deepEqual(parseStoredTaxes("not json"), DEFAULT_TAXES);
+  assert.deepEqual(parseStoredTaxes("[]"), []);
+  assert.deepEqual(parseStoredTaxes('[{"label":"City tax","rate":10}]'), [{ label: "City tax", rate: 10 }]);
+});
+test("describeTaxes", () => {
+  assert.equal(describeTaxes(DEFAULT_TAXES), "NYC sales tax (8.875%), NY rental tax (12%) and Service charge (5.9%)");
+  assert.equal(describeTaxes([{ label: "City tax", rate: 10 }]), "City tax (10%)");
+  assert.equal(describeTaxes([]), "");
+});
+```
+
+  and in `pricing.test.ts`:
+
+```ts
+test("custom taxes", () => {
+  const q = quoteFromSubtotal(350, 3, [{ label: "City tax", rate: 10 }]);
+  assert.deepEqual(q.lines, [{ label: "City tax", note: "10%", amount: 35 }]); assert.equal(q.taxTotal, 35); assert.equal(q.total, 385);
+});
+test("no taxes", () => { const q = quoteFromSubtotal(350, 3, []); assert.deepEqual(q.lines, []); assert.equal(q.total, 350); });
+test("quoteFromNights uses the given taxes", () =>
+  assert.equal(quoteFromNights(nightlyRates(100, {}, "2026-10-27", "2026-10-30"), [{ label: "City tax", rate: 10 }]).total, 330));
+test("quoteFromLines keeps stored lines", () => {
+  const q = quoteFromLines(350, 3, [{ label: "Old tax", note: "8%", amount: 28 }]);
+  assert.equal(q.taxTotal, 28); assert.equal(q.total, 378); assert.equal(q.dailyRate, 116.67);
+});
+```
+
+- [ ] **Step 2: Run `npm test`** — Expected: FAIL (missing `./taxes`, missing exports).
+- [ ] **Step 3: Implement.** Line amount = `round2(subtotal * rate / 100)`, note = `formatPercent(rate)`. `validateTaxes` checks count, then names, then rates; rate rounded to 3 decimals. `parseStoredTaxes` returns defaults for missing/invalid JSON, else the `validateTaxes` result (defaults if it errors). Add `Booking.taxLines Json?`; run `npx prisma db push` + `npx prisma generate`. `getSettings()` sets `taxes: parseStoredTaxes(map.taxes)`.
+- [ ] **Step 4: Run `npm test`** — Expected: all PASS (existing pricing tests unchanged).
+- [ ] **Step 5: Commit** — `git add src/lib prisma/schema.prisma && git commit -m "feat(taxes): configurable tax list in the pricing core"`
+
+### Task 9: Taxes in Settings and everywhere prices are shown
+
+**Files:**
+- Create: `src/components/admin/TaxEditor.tsx`
+- Modify: `src/lib/actions.ts` (`saveTaxesAction`, `createBookingAction`), `src/app/admin/(dashboard)/settings/page.tsx`, `src/app/api/bookings/route.ts`, `src/app/page.tsx`, `src/components/public/FleetSection.tsx`, `src/components/public/BookingModal.tsx`, `src/components/public/FaqSection.tsx`, `src/app/admin/(dashboard)/bookings/page.tsx`, `src/components/admin/BookingRow.tsx`, `src/app/admin/(dashboard)/bookings/new/page.tsx`, `src/components/admin/NewBookingForm.tsx`
+
+**Interfaces:**
+- Consumes: everything Task 8 produces; `getSettings().taxes`
+- Produces: `saveTaxesAction(rows: { label: string; rate: number }[]): Promise<ActionResult>`; props `taxes: TaxRate[]` on `FleetSection`, `BookingModal`, `FaqSection`, `NewBookingForm`; `BookingItem.taxLines: QuoteLine[] | null`
+
+- [ ] **Step 1: Settings.** `saveTaxesAction`: `requireAuth()`, `validateTaxes`, `setSetting("taxes", JSON.stringify(taxes))`, revalidate `/admin/settings` and the public pages; message `Taxes saved`. `TaxEditor` mirrors `TermsEditor`: rows of Name + "%" inputs with Remove, "+ Add tax", Save, ok/error feedback. New section **Taxes & fees** on the settings page, between Company & contacts and Terms: "Applied as a percentage of the rental price to every new booking. Existing bookings keep the taxes they were made with."
+- [ ] **Step 2: Charge with them.** API and `createBookingAction`: `quoteFromNights(nights, settings.taxes)`, store `taxLines: quote.lines`. Home page passes `settings.taxes` to `FleetSection` → `BookingModal` (`quoteFromNights(nights, taxes)`) and to `FaqSection`, whose payment answer reads: "We take Zelle, Cash App, cash, and credit or debit cards. Your booking quote itemizes everything up front — the daily rate plus <describeTaxes> — so the total you see is the total you pay. A refundable security deposit is held separately at pickup."; with no taxes the middle reads "the daily rate, with no extra taxes or fees". New-booking page passes `settings.taxes` to `NewBookingForm`.
+- [ ] **Step 3: History.** Bookings page maps `taxLines`. `BookingRow`: stored `taxLines` → `quoteFromLines(subtotal, days, taxLines)`; else `subtotal` → `quoteFromSubtotal(subtotal, days)`; else legacy `computeQuote`.
+- [ ] **Step 4: Run `npm test` and `npm run build`** — Expected: PASS, build succeeds. Browser check: with a 4th tax "Test fee 1%" saved, the booking modal shows four tax lines and a matching total; after removing it, three lines again (via the admin UI when the owner is logged in; otherwise through the stored setting, restored afterwards).
+- [ ] **Step 5: Commit** — `git add src prisma && git commit -m "feat(taxes): edit taxes in Settings; bookings store their tax lines"`
