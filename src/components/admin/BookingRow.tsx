@@ -5,7 +5,8 @@ import {
   updateBookingStatusAction,
   saveBookingNotesAction,
 } from "@/lib/actions";
-import { BOOKING_STATUSES, money, dateShort, computeQuote } from "@/lib/format";
+import { BOOKING_STATUSES, money, dateShort, computeQuote, quoteFromSubtotal } from "@/lib/format";
+import { groupNights, type Night } from "@/lib/pricing";
 import StatusBadge from "./StatusBadge";
 
 export type BookingItem = {
@@ -22,6 +23,9 @@ export type BookingItem = {
   pickupLocation: string | null;
   returnLocation: string | null;
   deliveryAddress: string | null;
+  /** Rental before tax; null on bookings made before per-day pricing. */
+  subtotal: number | null;
+  rateBreakdown: Night[] | null;
   status: string;
   message: string | null;
   adminNotes: string | null;
@@ -47,9 +51,16 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
   const [notesSaved, setNotesSaved] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const quote = computeQuote(booking.dailyRate, booking.days);
+  // New bookings carry their own per-day breakdown; legacy ones are rate × days.
+  const hasBreakdown = booking.subtotal !== null;
+  const quote = hasBreakdown
+    ? quoteFromSubtotal(booking.subtotal as number, booking.days)
+    : computeQuote(booking.dailyRate, booking.days);
+  const groups = hasBreakdown
+    ? groupNights(booking.rateBreakdown ?? [])
+    : [{ price: booking.dailyRate, count: booking.days }];
   // Bookings taken before taxes were introduced stored a pre-tax total.
-  const legacyPreTax = Math.abs(quote.total - booking.totalPrice) > 0.5;
+  const legacyPreTax = !hasBreakdown && Math.abs(quote.total - booking.totalPrice) > 0.5;
 
   return (
     <li className="border-b border-line/60 last:border-b-0">
@@ -126,10 +137,12 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
 
             {/* price breakdown */}
             <div className="mt-3 rounded-lg border border-line/70 bg-surface/60 p-3">
-              <div className="flex items-center justify-between text-muted">
-                <span>{money(booking.dailyRate)}/day × {booking.days} days</span>
-                <span className="text-fg">{money(quote.subtotal)}</span>
-              </div>
+              {groups.map((g) => (
+                <div key={g.price} className="flex items-center justify-between text-muted">
+                  <span>{money(g.price)}/day × {g.count} day{g.count === 1 ? "" : "s"}</span>
+                  <span className="text-fg">{money(g.price * g.count)}</span>
+                </div>
+              ))}
               {quote.lines.map((l) => (
                 <div key={l.label} className="mt-1 flex items-center justify-between text-xs text-muted/80">
                   <span>{l.label} <span className="text-muted/50">({l.note})</span></span>

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { getRateMaps } from "@/lib/rates";
+import { todayNY, addDays } from "@/lib/booking-options";
 import NewBookingForm from "@/components/admin/NewBookingForm";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +12,19 @@ export default async function NewBookingPage() {
     select: { id: true, make: true, model: true, year: true, dailyRate: true },
   });
 
+  // custom prices for the estimate: 90 days back (late logging) to a year ahead
+  const today = todayNY();
+  const rateMaps = await getRateMaps(
+    cars.map((c) => c.id),
+    addDays(today, -90),
+    addDays(today, 365)
+  );
+
   const options = cars.map((c) => ({
     id: c.id,
     label: `${c.make} ${c.model} ${c.year}`,
     dailyRate: c.dailyRate,
+    rates: rateMaps[c.id] ?? {},
   }));
 
   return (

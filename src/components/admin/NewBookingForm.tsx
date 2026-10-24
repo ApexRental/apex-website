@@ -2,9 +2,10 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { createBookingAction, type ActionResult } from "@/lib/actions";
-import { BOOKING_STATUSES, daysBetween, money, computeQuote } from "@/lib/format";
+import { BOOKING_STATUSES, money } from "@/lib/format";
+import { nightlyRates, quoteFromNights, type RateMap } from "@/lib/pricing";
 
-type CarOption = { id: string; label: string; dailyRate: number };
+type CarOption = { id: string; label: string; dailyRate: number; rates: RateMap };
 
 export default function NewBookingForm({ cars }: { cars: CarOption[] }) {
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
@@ -16,15 +17,14 @@ export default function NewBookingForm({ cars }: { cars: CarOption[] }) {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
-  const rate = cars.find((c) => c.id === carId)?.dailyRate ?? 0;
+  const selected = cars.find((c) => c.id === carId);
+  const rate = selected?.dailyRate ?? 0;
+  const rates = selected?.rates;
 
   const estimate = useMemo(() => {
-    if (!start || !end) return null;
-    const s = new Date(`${start}T00:00:00`);
-    const e = new Date(`${end}T00:00:00`);
-    if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e <= s) return null;
-    return computeQuote(rate, daysBetween(s, e));
-  }, [start, end, rate]);
+    const nights = nightlyRates(rate, rates ?? {}, start, end);
+    return nights.length > 0 ? quoteFromNights(nights) : null;
+  }, [start, end, rate, rates]);
 
   return (
     <form action={formAction} className="max-w-2xl space-y-5">
@@ -110,7 +110,7 @@ export default function NewBookingForm({ cars }: { cars: CarOption[] }) {
           <>
             <div className="flex items-center justify-between text-muted">
               <span>
-                {money(rate)} × {estimate.days} day{estimate.days > 1 ? "s" : ""}
+                {money(estimate.dailyRate)}{estimate.dailyRate !== rate ? " avg" : ""} × {estimate.days} day{estimate.days > 1 ? "s" : ""}
               </span>
               <span>{money(estimate.subtotal)}</span>
             </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { BOOKING_STATUSES } from "@/lib/format";
 import BookingRow, { BookingItem } from "@/components/admin/BookingRow";
+import type { Night } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,8 @@ export default async function BookingsPage({
     pickupLocation: b.pickupLocation,
     returnLocation: b.returnLocation,
     deliveryAddress: b.deliveryAddress,
+    subtotal: b.subtotal,
+    rateBreakdown: (b.rateBreakdown as Night[] | null) ?? null,
     status: b.status,
     message: b.message,
     adminNotes: b.adminNotes,

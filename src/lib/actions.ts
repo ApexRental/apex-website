@@ -15,7 +15,9 @@ import {
   isAuthenticated,
 } from "./auth";
 import { setSetting } from "./settings";
-import { BOOKING_STATUSES, daysBetween, computeQuote } from "./format";
+import { BOOKING_STATUSES } from "./format";
+import { nightlyRates, quoteFromNights } from "./pricing";
+import { getRateMap } from "./rates";
 
 async function requireAuth() {
   if (!(await isAuthenticated())) redirect("/admin/login");
@@ -129,8 +131,10 @@ export async function createBookingAction(
   const car = await prisma.car.findUnique({ where: { id: carId } });
   if (!car) return { ok: false, error: "That vehicle no longer exists." };
 
-  const days = daysBetween(start, end);
-  const totalPrice = computeQuote(car.dailyRate, days).total;
+  // price every billable day from the rate calendar (custom price or base)
+  const rates = await getRateMap(car.id, startStr, endStr);
+  const nights = nightlyRates(car.dailyRate, rates, startStr, endStr);
+  const quote = quoteFromNights(nights);
 
   await prisma.booking.create({
     data: {
@@ -141,9 +145,11 @@ export async function createBookingAction(
       licenseNumber: licenseNumber || null,
       startDate: start,
       endDate: end,
-      days,
-      dailyRate: car.dailyRate,
-      totalPrice,
+      days: quote.days,
+      dailyRate: quote.dailyRate,
+      subtotal: quote.subtotal,
+      rateBreakdown: nights,
+      totalPrice: quote.total,
       status,
       message: message || null,
     },
