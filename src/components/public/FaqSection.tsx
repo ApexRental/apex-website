@@ -19,7 +19,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How many miles do I get?",
-    a: "Unlimited mileage within the tri-state area (NY, NJ, CT) and PA. Planning to drive outside those states? Ask us first — it needs written authorization.",
+    a: "Unlimited mileage across New York and New Jersey. Planning to drive to another state? Ask us first — it needs written authorization.",
   },
   {
     q: "Can I cancel?",

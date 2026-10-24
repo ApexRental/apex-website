@@ -36,11 +36,14 @@ model Booking {
   phone         String
   email         String
   licenseNumber String?
-  startDate     DateTime
-  endDate       DateTime
+  startDate     DateTime // pickup date + time
+  endDate       DateTime // return date + time
   days          Int
   dailyRate     Float // rate locked at booking time
   totalPrice    Float
+  pickupLocation  String? // delivery area for pickup (e.g. "Manhattan")
+  returnLocation  String? // delivery area for return
+  deliveryAddress String? // exact street address for delivery/return
   status        String   @default("NEW") // NEW | CONFIRMED | ACTIVE | COMPLETED | CANCELLED
   message       String?
   adminNotes    String?

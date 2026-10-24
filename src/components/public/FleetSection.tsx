@@ -44,7 +44,7 @@ function Row({
 }
 
 export default function FleetSection({ cars }: { cars: CarDTO[] }) {
-  const { category, setCategory, dates } = useFleetFilter();
+  const { category, setCategory, draft } = useFleetFilter();
   const [selected, setSelected] = useState<CarDTO | null>(null);
   const [viewing, setViewing] = useState<CarDTO | null>(null);
 
@@ -172,7 +172,7 @@ export default function FleetSection({ cars }: { cars: CarDTO[] }) {
       {selected && (
         <BookingModal
           car={selected}
-          initialDates={dates}
+          initialDraft={draft}
           onClose={() => setSelected(null)}
         />
       )}

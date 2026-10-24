@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { daysBetween, dateShort, computeQuote } from "@/lib/format";
+import { daysBetween, computeQuote } from "@/lib/format";
+import { formatTime, isValidTime, DEFAULT_TIME, todayNY } from "@/lib/booking-options";
 import { sendBookingNotifications } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
@@ -13,6 +14,11 @@ const bookingSchema = z.object({
   licenseNumber: z.string().max(80).optional(),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  pickupTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  returnTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  pickupLocation: z.string().max(80).optional(),
+  returnLocation: z.string().max(80).optional(),
+  deliveryAddress: z.string().max(300).optional(),
   message: z.string().max(2000).optional(),
   company: z.string().max(200).optional(), // honeypot — must stay empty
 });
@@ -49,25 +55,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, bookingId: "skipped" }, { status: 200 });
   }
 
-  const start = new Date(`${data.startDate}T00:00:00`);
-  const end = new Date(`${data.endDate}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const pickupTime = data.pickupTime && isValidTime(data.pickupTime) ? data.pickupTime : DEFAULT_TIME;
+  const returnTime = data.returnTime && isValidTime(data.returnTime) ? data.returnTime : DEFAULT_TIME;
 
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return NextResponse.json({ error: "Invalid dates." }, { status: 400 });
-  }
-  if (start < today) {
+  // Validate the date range by string comparison (timezone-robust), then store
+  // the timed values as UTC wall-clock (trailing Z) so the hour never drifts.
+  const todayStr = todayNY();
+  if (data.startDate < todayStr) {
     return NextResponse.json(
       { error: "Pickup date can't be in the past." },
       { status: 400 }
     );
   }
-  if (end <= start) {
+  if (data.endDate <= data.startDate) {
     return NextResponse.json(
       { error: "Return date must be after the pickup date." },
       { status: 400 }
     );
+  }
+
+  const startDay = new Date(`${data.startDate}T00:00:00Z`);
+  const endDay = new Date(`${data.endDate}T00:00:00Z`);
+  const start = new Date(`${data.startDate}T${pickupTime}:00Z`);
+  const end = new Date(`${data.endDate}T${returnTime}:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return NextResponse.json({ error: "Invalid dates." }, { status: 400 });
   }
 
   const car = await prisma.car.findUnique({ where: { id: data.carId } });
@@ -84,8 +96,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const days = daysBetween(start, end);
+  const days = daysBetween(startDay, endDay);
   const totalPrice = computeQuote(car.dailyRate, days).total;
+
+  const pickupLocation = data.pickupLocation?.trim() || null;
+  const returnLocation = data.returnLocation?.trim() || null;
+  const deliveryAddress = data.deliveryAddress?.trim() || null;
 
   const booking = await prisma.booking.create({
     data: {
@@ -99,6 +115,9 @@ export async function POST(request: Request) {
       days,
       dailyRate: car.dailyRate,
       totalPrice,
+      pickupLocation,
+      returnLocation,
+      deliveryAddress,
       message: data.message ?? null,
     },
   });
@@ -110,8 +129,13 @@ export async function POST(request: Request) {
     phone: booking.phone,
     email: booking.email,
     car: `${car.make} ${car.model} ${car.year}`,
-    startDate: dateShort(start),
-    endDate: dateShort(end),
+    startDate: data.startDate,
+    endDate: data.endDate,
+    pickupTime: formatTime(pickupTime),
+    returnTime: formatTime(returnTime),
+    pickupLocation,
+    returnLocation,
+    deliveryAddress,
     days,
     dailyRate: car.dailyRate,
     message: booking.message,

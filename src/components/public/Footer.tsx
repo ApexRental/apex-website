@@ -86,8 +86,6 @@ export default function Footer({
           <ul className="mt-4 space-y-2.5 text-sm text-muted">
             <li>New York City</li>
             <li>New Jersey</li>
-            <li>Connecticut</li>
-            <li>Pennsylvania</li>
           </ul>
           <p className="mt-3 text-xs text-muted/60">Airport delivery available</p>
         </div>

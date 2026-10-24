@@ -19,6 +19,9 @@ export type BookingItem = {
   days: number;
   dailyRate: number;
   totalPrice: number;
+  pickupLocation: string | null;
+  returnLocation: string | null;
+  deliveryAddress: string | null;
   status: string;
   message: string | null;
   adminNotes: string | null;
@@ -26,6 +29,17 @@ export type BookingItem = {
   carName: string;
   conflict?: boolean;
 };
+
+/** Format the time-of-day stored in the UTC-Z datetime (exact wall-clock). */
+function timeShort(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
+}
 
 export default function BookingRow({ booking }: { booking: BookingItem }) {
   const [expanded, setExpanded] = useState(false);
@@ -93,6 +107,21 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
             <Row k="Phone" v={<a className="text-accent-bright hover:underline" href={`tel:${booking.phone}`}>{booking.phone}</a>} />
             <Row k="Email" v={<a className="text-accent-bright hover:underline" href={`mailto:${booking.email}`}>{booking.email}</a>} />
             <Row k="License #" v={booking.licenseNumber || "—"} />
+            <Row
+              k="Pick-up"
+              v={`${dateShort(booking.startDate)} · ${timeShort(booking.startDate)}${
+                booking.pickupLocation ? ` — ${booking.pickupLocation}` : ""
+              }`}
+            />
+            <Row
+              k="Return"
+              v={`${dateShort(booking.endDate)} · ${timeShort(booking.endDate)}${
+                booking.returnLocation ? ` — ${booking.returnLocation}` : ""
+              }`}
+            />
+            {booking.deliveryAddress && (
+              <Row k="Delivery" v={booking.deliveryAddress} />
+            )}
             {booking.message && <Row k="Message" v={booking.message} />}
 
             {/* price breakdown */}

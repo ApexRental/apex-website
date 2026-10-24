@@ -8,7 +8,7 @@ export const BUSINESS = {
   phone: "+1-888-505-0836",
   email: "customercare@apexrentalfleet.com",
   tagline: "Drive Your Journey",
-  areasServed: ["New York", "New Jersey", "Connecticut", "Pennsylvania"],
+  areasServed: ["New York", "New Jersey"],
   hours: "Mo-Su 08:00-23:59",
   priceRange: "$$",
 } as const;

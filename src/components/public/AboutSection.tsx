@@ -81,7 +81,7 @@ export default function AboutSection({
               <div className="grid grid-cols-2 divide-x divide-line/60 border-t border-line/60">
                 <div className="px-4 py-5 text-center">
                   <p className="font-display text-2xl font-bold text-fg">
-                    <CountUp end={4} />
+                    <CountUp end={2} />
                   </p>
                   <p className="mt-1 text-[11px] uppercase tracking-wider text-muted">
                     states you can roam

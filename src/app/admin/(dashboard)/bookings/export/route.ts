@@ -18,8 +18,12 @@ export async function GET() {
 
   const header = [
     "Created", "Status", "Name", "Phone", "Email", "License",
-    "Car", "Pickup", "Return", "Days", "Daily rate", "Total", "Message", "Admin notes",
+    "Car", "Pickup", "Pickup time", "Pickup location", "Return", "Return time",
+    "Return location", "Delivery address", "Days", "Daily rate", "Total",
+    "Message", "Admin notes",
   ];
+
+  const hhmm = (d: Date) => d.toISOString().slice(11, 16); // UTC HH:MM
 
   const rows = bookings.map((b) =>
     [
@@ -31,7 +35,12 @@ export async function GET() {
       b.licenseNumber ?? "",
       `${b.car.make} ${b.car.model} ${b.car.year}`,
       b.startDate.toISOString().slice(0, 10),
+      hhmm(b.startDate),
+      b.pickupLocation ?? "",
       b.endDate.toISOString().slice(0, 10),
+      hhmm(b.endDate),
+      b.returnLocation ?? "",
+      b.deliveryAddress ?? "",
       b.days,
       b.dailyRate,
       b.totalPrice,

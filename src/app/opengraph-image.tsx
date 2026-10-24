@@ -161,7 +161,7 @@ export default function OgImage() {
                 color: "#9aa6ba",
               }}
             >
-              NY · NJ · CT · PA
+              NY · NJ
             </div>
           </div>
         </div>

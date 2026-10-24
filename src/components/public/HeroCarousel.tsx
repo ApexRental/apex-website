@@ -143,7 +143,7 @@ export default function HeroCarousel({ rating }: { rating: number }) {
                 </p>
                 <div className="hero-in-3 mt-9 flex flex-wrap items-center gap-4">
                   <button
-                    onClick={() => applyAndScroll(slide.category, { pickup: "", return: "" })}
+                    onClick={() => applyAndScroll(slide.category)}
                     className="btn btn-primary px-8 py-4 text-sm"
                   >
                     {slide.cta}
@@ -165,7 +165,7 @@ export default function HeroCarousel({ rating }: { rating: number }) {
             </div>
             <span className="h-4 w-px bg-fg/20" />
             <div className="flex items-center gap-2">
-              <dt className="font-display font-bold">NY · NJ · CT · PA</dt>
+              <dt className="font-display font-bold">NY · NJ</dt>
             </div>
             <span className="hidden h-4 w-px bg-fg/20 sm:block" />
             <div className="flex items-center gap-2">
