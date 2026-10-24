@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { CarDTO } from "@/lib/types";
 import { money } from "@/lib/format";
 import { nightlyRates, quoteFromNights, groupNights } from "@/lib/pricing";
+import type { TaxRate } from "@/lib/taxes";
 import {
   AREA_GROUPS,
   TIME_GROUPS,
@@ -26,6 +27,8 @@ type Props = {
   car: CarDTO;
   onClose: () => void;
   initialDraft?: BookingDraft;
+  /** Taxes & fees from Settings, applied to the rental subtotal. */
+  taxes: TaxRate[];
 };
 
 const inputCls =
@@ -66,7 +69,7 @@ function Field({
   );
 }
 
-export default function BookingModal({ car, onClose, initialDraft }: Props) {
+export default function BookingModal({ car, onClose, initialDraft, taxes }: Props) {
   const d = initialDraft ?? EMPTY_DRAFT;
   const today = todayNY();
 
@@ -87,7 +90,7 @@ export default function BookingModal({ car, onClose, initialDraft }: Props) {
     [car.dailyRate, car.rates, startDate, endDate]
   );
   const days = nights.length;
-  const quote = days > 0 ? quoteFromNights(nights) : null;
+  const quote = days > 0 ? quoteFromNights(nights, taxes) : null;
   const groups = groupNights(nights);
   const resolvedReturnLoc =
     returnLocation === SAME_AS_PICKUP ? pickupLocation : returnLocation;

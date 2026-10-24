@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { nightlyRates, quoteFromNights, groupNights } from "@/lib/pricing";
 import { getRateMap } from "@/lib/rates";
+import { getSettings } from "@/lib/settings";
 import { formatTime, isValidTime, DEFAULT_TIME, todayNY } from "@/lib/booking-options";
 import { sendBookingNotifications } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
@@ -96,9 +97,12 @@ export async function POST(request: Request) {
   }
 
   // price every billable day from the rate calendar (custom price or base)
-  const rates = await getRateMap(car.id, data.startDate, data.endDate);
+  const [rates, settings] = await Promise.all([
+    getRateMap(car.id, data.startDate, data.endDate),
+    getSettings(),
+  ]);
   const nights = nightlyRates(car.dailyRate, rates, data.startDate, data.endDate);
-  const quote = quoteFromNights(nights);
+  const quote = quoteFromNights(nights, settings.taxes);
 
   const pickupLocation = data.pickupLocation?.trim() || null;
   const returnLocation = data.returnLocation?.trim() || null;
@@ -117,6 +121,7 @@ export async function POST(request: Request) {
       dailyRate: quote.dailyRate,
       subtotal: quote.subtotal,
       rateBreakdown: nights,
+      taxLines: quote.lines,
       totalPrice: quote.total,
       pickupLocation,
       returnLocation,

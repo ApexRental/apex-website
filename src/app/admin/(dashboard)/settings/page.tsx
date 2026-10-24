@@ -1,5 +1,6 @@
 import { getSettings } from "@/lib/settings";
 import TermsEditor from "@/components/admin/TermsEditor";
+import TaxEditor from "@/components/admin/TaxEditor";
 import { ContactForm, PasswordForm } from "@/components/admin/SettingsForms";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,17 @@ export default async function SettingsPage() {
         </p>
         <div className="mt-6">
           <ContactForm settings={settings} />
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-line bg-surface p-6">
+        <h2 className="font-display text-lg font-bold">Taxes &amp; fees</h2>
+        <p className="mt-1 text-sm text-muted">
+          Applied as a percentage of the rental price to every new booking.
+          Existing bookings keep the taxes they were made with.
+        </p>
+        <div className="mt-6">
+          <TaxEditor initial={settings.taxes} />
         </div>
       </section>
 

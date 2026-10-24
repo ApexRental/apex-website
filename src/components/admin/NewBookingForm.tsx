@@ -4,10 +4,11 @@ import { useActionState, useMemo, useState } from "react";
 import { createBookingAction, type ActionResult } from "@/lib/actions";
 import { BOOKING_STATUSES, money } from "@/lib/format";
 import { nightlyRates, quoteFromNights, type RateMap } from "@/lib/pricing";
+import type { TaxRate } from "@/lib/taxes";
 
 type CarOption = { id: string; label: string; dailyRate: number; rates: RateMap };
 
-export default function NewBookingForm({ cars }: { cars: CarOption[] }) {
+export default function NewBookingForm({ cars, taxes }: { cars: CarOption[]; taxes: TaxRate[] }) {
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     createBookingAction,
     null
@@ -23,8 +24,8 @@ export default function NewBookingForm({ cars }: { cars: CarOption[] }) {
 
   const estimate = useMemo(() => {
     const nights = nightlyRates(rate, rates ?? {}, start, end);
-    return nights.length > 0 ? quoteFromNights(nights) : null;
-  }, [start, end, rate, rates]);
+    return nights.length > 0 ? quoteFromNights(nights, taxes) : null;
+  }, [start, end, rate, rates, taxes]);
 
   return (
     <form action={formAction} className="max-w-2xl space-y-5">

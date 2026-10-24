@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getRateMaps } from "@/lib/rates";
+import { getSettings } from "@/lib/settings";
 import { todayNY, addDays } from "@/lib/booking-options";
 import NewBookingForm from "@/components/admin/NewBookingForm";
 
@@ -14,6 +15,7 @@ export default async function NewBookingPage() {
 
   // custom prices for the estimate: 90 days back (late logging) to a year ahead
   const today = todayNY();
+  const settings = await getSettings();
   const rateMaps = await getRateMaps(
     cars.map((c) => c.id),
     addDays(today, -90),
@@ -47,7 +49,7 @@ export default async function NewBookingPage() {
           Add a vehicle to the fleet first.
         </p>
       ) : (
-        <NewBookingForm cars={options} />
+        <NewBookingForm cars={options} taxes={settings.taxes} />
       )}
     </div>
   );

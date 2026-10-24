@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CarDTO } from "@/lib/types";
+import type { TaxRate } from "@/lib/taxes";
 import { CATEGORY_LABELS } from "@/lib/format";
 import CarCard from "./CarCard";
 import CarGallery from "./CarGallery";
@@ -43,7 +44,7 @@ function Row({
   );
 }
 
-export default function FleetSection({ cars }: { cars: CarDTO[] }) {
+export default function FleetSection({ cars, taxes }: { cars: CarDTO[]; taxes: TaxRate[] }) {
   const { category, setCategory, draft } = useFleetFilter();
   const [selected, setSelected] = useState<CarDTO | null>(null);
   const [viewing, setViewing] = useState<CarDTO | null>(null);
@@ -173,6 +174,7 @@ export default function FleetSection({ cars }: { cars: CarDTO[] }) {
         <BookingModal
           car={selected}
           initialDraft={draft}
+          taxes={taxes}
           onClose={() => setSelected(null)}
         />
       )}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { BOOKING_STATUSES } from "@/lib/format";
 import BookingRow, { BookingItem } from "@/components/admin/BookingRow";
 import type { Night } from "@/lib/pricing";
+import type { QuoteLine } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ export default async function BookingsPage({
     deliveryAddress: b.deliveryAddress,
     subtotal: b.subtotal,
     rateBreakdown: (b.rateBreakdown as Night[] | null) ?? null,
+    taxLines: (b.taxLines as QuoteLine[] | null) ?? null,
     status: b.status,
     message: b.message,
     adminNotes: b.adminNotes,

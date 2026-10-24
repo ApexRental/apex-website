@@ -5,7 +5,15 @@ import {
   updateBookingStatusAction,
   saveBookingNotesAction,
 } from "@/lib/actions";
-import { BOOKING_STATUSES, money, dateShort, computeQuote, quoteFromSubtotal } from "@/lib/format";
+import {
+  BOOKING_STATUSES,
+  money,
+  dateShort,
+  computeQuote,
+  quoteFromSubtotal,
+  quoteFromLines,
+  type QuoteLine,
+} from "@/lib/format";
 import { groupNights, type Night } from "@/lib/pricing";
 import StatusBadge from "./StatusBadge";
 
@@ -26,6 +34,8 @@ export type BookingItem = {
   /** Rental before tax; null on bookings made before per-day pricing. */
   subtotal: number | null;
   rateBreakdown: Night[] | null;
+  /** Taxes as charged at booking time; null on older bookings (defaults applied). */
+  taxLines: QuoteLine[] | null;
   status: string;
   message: string | null;
   adminNotes: string | null;
@@ -53,9 +63,11 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
 
   // New bookings carry their own per-day breakdown; legacy ones are rate × days.
   const hasBreakdown = booking.subtotal !== null;
-  const quote = hasBreakdown
-    ? quoteFromSubtotal(booking.subtotal as number, booking.days)
-    : computeQuote(booking.dailyRate, booking.days);
+  const quote = !hasBreakdown
+    ? computeQuote(booking.dailyRate, booking.days)
+    : booking.taxLines
+      ? quoteFromLines(booking.subtotal as number, booking.days, booking.taxLines)
+      : quoteFromSubtotal(booking.subtotal as number, booking.days);
   const groups = hasBreakdown
     ? groupNights(booking.rateBreakdown ?? [])
     : [{ price: booking.dailyRate, count: booking.days }];

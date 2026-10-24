@@ -85,7 +85,7 @@ export default async function Home() {
           <SearchBar />
           <PromoStrip />
           <BrandStrip />
-          <FleetSection cars={carDtos} />
+          <FleetSection cars={carDtos} taxes={settings.taxes} />
         </FleetFilterProvider>
         <HowItWorks />
         <AboutSection avgRating={avgRating} />
@@ -96,7 +96,7 @@ export default async function Home() {
           monthlyFrom={settings.monthlyFrom}
         />
         <TermsPreview terms={settings.terms} depositNote={settings.depositNote} />
-        <FaqSection />
+        <FaqSection taxes={settings.taxes} />
         <ServiceAreaSection />
         <ContactSection
           phone={settings.phone}

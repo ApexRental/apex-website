@@ -14,7 +14,8 @@ import {
   clearSessionCookie,
   isAuthenticated,
 } from "./auth";
-import { setSetting } from "./settings";
+import { setSetting, getSettings } from "./settings";
+import { validateTaxes } from "./taxes";
 import { BOOKING_STATUSES } from "./format";
 import { nightlyRates, quoteFromNights } from "./pricing";
 import { getRateMap } from "./rates";
@@ -132,9 +133,12 @@ export async function createBookingAction(
   if (!car) return { ok: false, error: "That vehicle no longer exists." };
 
   // price every billable day from the rate calendar (custom price or base)
-  const rates = await getRateMap(car.id, startStr, endStr);
+  const [rates, settings] = await Promise.all([
+    getRateMap(car.id, startStr, endStr),
+    getSettings(),
+  ]);
   const nights = nightlyRates(car.dailyRate, rates, startStr, endStr);
-  const quote = quoteFromNights(nights);
+  const quote = quoteFromNights(nights, settings.taxes);
 
   await prisma.booking.create({
     data: {
@@ -149,6 +153,7 @@ export async function createBookingAction(
       dailyRate: quote.dailyRate,
       subtotal: quote.subtotal,
       rateBreakdown: nights,
+      taxLines: quote.lines,
       totalPrice: quote.total,
       status,
       message: message || null,
@@ -359,6 +364,20 @@ export async function saveContactSettingsAction(
   }
   revalidatePublic();
   return { ok: true, message: "Contact info saved" };
+}
+
+/** Save the taxes & fees applied to every new booking (percent of the rental). */
+export async function saveTaxesAction(
+  rows: { label: string; rate: number }[]
+): Promise<ActionResult> {
+  await requireAuth();
+  if (!Array.isArray(rows)) return { ok: false, error: "Invalid taxes payload" };
+  const result = validateTaxes(rows);
+  if ("error" in result) return { ok: false, error: result.error };
+  await setSetting("taxes", JSON.stringify(result.taxes));
+  revalidatePath("/admin/settings");
+  revalidatePublic();
+  return { ok: true, message: "Taxes saved" };
 }
 
 export async function saveTermsAction(

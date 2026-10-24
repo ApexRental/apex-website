@@ -1,4 +1,15 @@
 import Reveal from "./Reveal";
+import { describeTaxes, type TaxRate } from "@/lib/taxes";
+
+const PAYMENT_Q = "How do I pay, and what's added to the daily rate?";
+
+/** The payment answer lists the taxes currently set in Settings. */
+function paymentAnswer(taxes: TaxRate[]): string {
+  const charges = taxes.length > 0
+    ? `the daily rate plus ${describeTaxes(taxes)}`
+    : "the daily rate, with no extra taxes or fees";
+  return `We take Zelle, Cash App, cash, and credit or debit cards. Your booking quote itemizes everything up front — ${charges} — so the total you see is the total you pay. A refundable security deposit is held separately at pickup.`;
+}
 
 const FAQS: { q: string; a: string }[] = [
   {
@@ -6,8 +17,8 @@ const FAQS: { q: string; a: string }[] = [
     a: "You must be 20 or older with a valid driver license held for at least a year, proof of your own full-coverage insurance (we don't sell CDW), and a card for the security deposit. The whole thing takes about ten minutes at pickup.",
   },
   {
-    q: "How do I pay, and what's added to the daily rate?",
-    a: "We take Zelle, Cash App, cash, and credit or debit cards. Your booking quote itemizes everything up front — the daily rate plus NYC sales tax (8.875%), New York rental tax (12%), and a 5.9% service charge — so the total you see is the total you pay. A refundable security deposit is held separately at pickup.",
+    q: PAYMENT_Q,
+    a: "", // filled from Settings at render time
   },
   {
     q: "How does the deposit work?",
@@ -43,7 +54,8 @@ const FAQS: { q: string; a: string }[] = [
   },
 ];
 
-export default function FaqSection() {
+export default function FaqSection({ taxes }: { taxes: TaxRate[] }) {
+  const faqs = FAQS.map((f) => (f.q === PAYMENT_Q ? { ...f, a: paymentAnswer(taxes) } : f));
   return (
     <section id="faq" className="scroll-mt-20 border-t border-line/60">
       <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
@@ -59,7 +71,7 @@ export default function FaqSection() {
         </Reveal>
 
         <div className="mt-12 space-y-3">
-          {FAQS.map((f, i) => (
+          {faqs.map((f, i) => (
             <Reveal key={f.q} delay={i * 60}>
               <details className="faq card group transition-colors open:border-accent/40 hover:border-white/15">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5">
