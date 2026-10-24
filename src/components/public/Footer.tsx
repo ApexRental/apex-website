@@ -129,7 +129,7 @@ export default function Footer({
                 className="onpoint-on-light h-5 w-auto"
               />
               <span className="font-semibold tracking-wide text-muted transition-colors group-hover:text-fg">
-                On Point Analytics
+                On Point Analysis
               </span>
             </a>
           </span>
