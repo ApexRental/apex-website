@@ -13,6 +13,8 @@ export type CarDTO = {
   images: string[];
   features: string[];
   overbooked: boolean;
+  /** Custom per-day prices ("YYYY-MM-DD" -> USD) for the next 365 days. */
+  rates: Record<string, number>;
 };
 
 export type PublicSettings = {

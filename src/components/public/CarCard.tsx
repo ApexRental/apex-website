@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import { CarDTO } from "@/lib/types";
 import { CATEGORY_LABELS, money } from "@/lib/format";
+import { displayRate } from "@/lib/pricing";
+import { useFleetFilter } from "./FleetFilterContext";
 import CarSilhouette from "./CarSilhouette";
 
 export default function CarCard({
@@ -12,6 +16,8 @@ export default function CarCard({
   onBook: (car: CarDTO) => void;
   onView?: (car: CarDTO) => void;
 }) {
+  const { draft } = useFleetFilter();
+  const shown = displayRate(car.dailyRate, car.rates, draft.pickupDate, draft.returnDate);
   const photoCount = car.images.length || (car.imageUrl ? 1 : 0);
   const canView = Boolean(onView) && photoCount > 0;
 
@@ -59,10 +65,17 @@ export default function CarCard({
           </span>
         )}
 
-        {/* price pill */}
-        <span className="absolute bottom-3 right-3 rounded-full border border-white/15 bg-black/50 px-3.5 py-1.5 font-display text-sm font-bold text-white backdrop-blur-md">
-          {money(car.dailyRate)}
-          <span className="font-medium text-white/70"> /day</span>
+        {/* price pill — the average for the searched dates when there are any */}
+        <span className="absolute bottom-3 right-3 flex flex-col items-end gap-1">
+          <span className="rounded-full border border-white/15 bg-black/50 px-3.5 py-1.5 font-display text-sm font-bold text-white backdrop-blur-md">
+            {money(shown.price)}
+            <span className="font-medium text-white/70"> /day</span>
+          </span>
+          {shown.isAverage && (
+            <span className="rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white/80 backdrop-blur-md">
+              avg for your dates
+            </span>
+          )}
         </span>
 
         {/* overbooked badge */}

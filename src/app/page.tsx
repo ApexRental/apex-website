@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
+import { getRateMaps } from "@/lib/rates";
+import { todayNY, addDays } from "@/lib/booking-options";
 import { CarDTO } from "@/lib/types";
 import Navbar from "@/components/public/Navbar";
 import { FleetFilterProvider } from "@/components/public/FleetFilterContext";
@@ -35,6 +37,13 @@ export default async function Home() {
     }),
   ]);
 
+  const today = todayNY();
+  const rateMaps = await getRateMaps(
+    cars.map((c) => c.id),
+    today,
+    addDays(today, 365)
+  );
+
   const carDtos: CarDTO[] = cars.map((c) => ({
     id: c.id,
     make: c.make,
@@ -50,6 +59,7 @@ export default async function Home() {
     images: c.images ? c.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
     features: c.features ? c.features.split(",").map((f) => f.trim()).filter(Boolean) : [],
     overbooked: c.overbooked,
+    rates: rateMaps[c.id] ?? {},
   }));
 
   const reviewDtos: ReviewDTO[] = reviews.map((r) => ({

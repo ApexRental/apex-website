@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { CarDTO } from "@/lib/types";
-import { money, daysBetween, computeQuote } from "@/lib/format";
+import { money } from "@/lib/format";
+import { nightlyRates, quoteFromNights, groupNights } from "@/lib/pricing";
 import {
   AREA_GROUPS,
   TIME_GROUPS,
@@ -80,15 +81,14 @@ export default function BookingModal({ car, onClose, initialDraft }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  const days = useMemo(() => {
-    if (!startDate || !endDate) return 0;
-    const s = new Date(`${startDate}T00:00:00`);
-    const e = new Date(`${endDate}T00:00:00`);
-    if (e <= s) return 0;
-    return daysBetween(s, e);
-  }, [startDate, endDate]);
-
-  const quote = days > 0 ? computeQuote(car.dailyRate, days) : null;
+  // per-day prices for the chosen dates (custom calendar price or base rate)
+  const nights = useMemo(
+    () => nightlyRates(car.dailyRate, car.rates, startDate, endDate),
+    [car.dailyRate, car.rates, startDate, endDate]
+  );
+  const days = nights.length;
+  const quote = days > 0 ? quoteFromNights(nights) : null;
+  const groups = groupNights(nights);
   const resolvedReturnLoc =
     returnLocation === SAME_AS_PICKUP ? pickupLocation : returnLocation;
 
@@ -304,11 +304,16 @@ export default function BookingModal({ car, onClose, initialDraft }: Props) {
               <div className="rounded-xl border border-line bg-raised/50 p-4">
                 {quote ? (
                   <>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted">
-                        {money(car.dailyRate)} × {days} day{days > 1 ? "s" : ""}
-                      </span>
-                      <span className="font-medium">{money(quote.subtotal)}</span>
+                    {/* one row per price: "$100 × 2 days", "$150 × 1 day" */}
+                    <div className="space-y-1">
+                      {groups.map((g) => (
+                        <div key={g.price} className="flex items-center justify-between text-sm">
+                          <span className="text-muted">
+                            {money(g.price)} × {g.count} day{g.count > 1 ? "s" : ""}
+                          </span>
+                          <span className="font-medium">{money(g.price * g.count)}</span>
+                        </div>
+                      ))}
                     </div>
                     <div className="mt-2 space-y-1.5 border-t border-line/60 pt-2">
                       {quote.lines.map((l) => (

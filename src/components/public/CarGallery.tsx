@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { CarDTO } from "@/lib/types";
 import { CATEGORY_LABELS, money } from "@/lib/format";
+import { displayRate } from "@/lib/pricing";
+import { useFleetFilter } from "./FleetFilterContext";
 
 export default function CarGallery({
   car,
@@ -15,6 +17,8 @@ export default function CarGallery({
   onBook: (car: CarDTO) => void;
 }) {
   // gallery = explicit images, else fall back to the single cover
+  const { draft } = useFleetFilter();
+  const shown = displayRate(car.dailyRate, car.rates, draft.pickupDate, draft.returnDate);
   const shots = car.images.length > 0 ? car.images : car.imageUrl ? [car.imageUrl] : [];
   const [i, setI] = useState(0);
 
@@ -150,8 +154,11 @@ export default function CarGallery({
 
         <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
           <span className="font-display text-lg font-bold text-white">
-            {money(car.dailyRate)}
+            {money(shown.price)}
             <span className="text-sm font-medium text-white/60"> /day</span>
+            {shown.isAverage && (
+              <span className="ml-2 text-xs font-medium text-white/60">avg for your dates</span>
+            )}
           </span>
           {car.overbooked ? (
             <button
