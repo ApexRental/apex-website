@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { SITE_URL } from "@/lib/site";
-import { computeQuote, money } from "@/lib/format";
+import { money, type Quote } from "@/lib/format";
+import type { PriceGroup } from "@/lib/pricing";
 
 type BookingEmailData = {
   id: string;
@@ -16,7 +17,10 @@ type BookingEmailData = {
   returnLocation?: string | null;
   deliveryAddress?: string | null;
   days: number;
-  dailyRate: number;
+  /** Taxed quote built from the per-day prices (see lib/pricing). */
+  quote: Quote;
+  /** Days grouped by price, e.g. [{ price: 100, count: 2 }, { price: 150, count: 1 }]. */
+  groups: PriceGroup[];
   message?: string | null;
 };
 
@@ -106,7 +110,7 @@ function footer(): string {
 
 /** Full branded confirmation email for the CLIENT (Basis-style, light). */
 function clientEmailHtml(data: BookingEmailData): string {
-  const q = computeQuote(data.dailyRate, data.days);
+  const q = data.quote;
   const taxRows = q.lines
     .map(
       (l) => `
@@ -226,14 +230,14 @@ function clientEmailHtml(data: BookingEmailData): string {
                   <td style="padding:5px 0;color:#8b95a8;font-size:12px;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif;">FARE</td>
                   <td></td>
                 </tr>
-                <tr>
-                  <td style="padding:3px 0 8px 0;color:#2b3346;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${data.car} &middot; ${
-    data.days
-  } day${data.days > 1 ? "s" : ""}</td>
-                  <td align="right" style="padding:3px 0 8px 0;color:#2b3346;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${usd(
-                    q.subtotal
-                  )}</td>
-                </tr>
+                ${data.groups
+                  .map(
+                    (g) => `<tr>
+                  <td style="padding:3px 0 8px 0;color:#2b3346;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${data.car} &middot; ${money(g.price)} &times; ${g.count} day${g.count > 1 ? "s" : ""}</td>
+                  <td align="right" style="padding:3px 0 8px 12px;white-space:nowrap;vertical-align:top;color:#2b3346;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${usd(g.price * g.count)}</td>
+                </tr>`
+                  )
+                  .join("")}
               </table>
 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e7ebf3;margin-top:4px;padding-top:4px;">
@@ -298,7 +302,7 @@ function clientEmailHtml(data: BookingEmailData): string {
 
 /** Compact branded notification for the OWNER. */
 function ownerEmailHtml(data: BookingEmailData): string {
-  const q = computeQuote(data.dailyRate, data.days);
+  const q = data.quote;
   const row = (label: string, value: string, strong = false) => `
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #eef1f6;color:#8b95a8;font-size:13px;">${label}</td>
@@ -340,7 +344,10 @@ function ownerEmailHtml(data: BookingEmailData): string {
               : ""
           }
           ${row("Duration", `${data.days} day${data.days > 1 ? "s" : ""}`)}
-          ${row("Subtotal", `${money(data.dailyRate)} × ${data.days} = ${usd(q.subtotal)}`)}
+          ${row(
+            "Subtotal",
+            `${data.groups.map((g) => `${money(g.price)} × ${g.count}`).join(" + ")} = ${usd(q.subtotal)}`
+          )}
           ${q.lines.map((l) => row(`${l.label} (${l.note})`, usd(l.amount))).join("")}
           ${row("Total (incl. tax)", usd(q.total), true)}
           ${row("Name", data.fullName)}

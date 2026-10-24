@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { daysBetween, computeQuote } from "@/lib/format";
+import { nightlyRates, quoteFromNights, groupNights } from "@/lib/pricing";
+import { getRateMap } from "@/lib/rates";
 import { formatTime, isValidTime, DEFAULT_TIME, todayNY } from "@/lib/booking-options";
 import { sendBookingNotifications } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
@@ -74,8 +75,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const startDay = new Date(`${data.startDate}T00:00:00Z`);
-  const endDay = new Date(`${data.endDate}T00:00:00Z`);
   const start = new Date(`${data.startDate}T${pickupTime}:00Z`);
   const end = new Date(`${data.endDate}T${returnTime}:00Z`);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
@@ -96,8 +95,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const days = daysBetween(startDay, endDay);
-  const totalPrice = computeQuote(car.dailyRate, days).total;
+  // price every billable day from the rate calendar (custom price or base)
+  const rates = await getRateMap(car.id, data.startDate, data.endDate);
+  const nights = nightlyRates(car.dailyRate, rates, data.startDate, data.endDate);
+  const quote = quoteFromNights(nights);
 
   const pickupLocation = data.pickupLocation?.trim() || null;
   const returnLocation = data.returnLocation?.trim() || null;
@@ -112,9 +113,11 @@ export async function POST(request: Request) {
       licenseNumber: data.licenseNumber ?? null,
       startDate: start,
       endDate: end,
-      days,
-      dailyRate: car.dailyRate,
-      totalPrice,
+      days: quote.days,
+      dailyRate: quote.dailyRate,
+      subtotal: quote.subtotal,
+      rateBreakdown: nights,
+      totalPrice: quote.total,
       pickupLocation,
       returnLocation,
       deliveryAddress,
@@ -136,8 +139,9 @@ export async function POST(request: Request) {
     pickupLocation,
     returnLocation,
     deliveryAddress,
-    days,
-    dailyRate: car.dailyRate,
+    days: quote.days,
+    quote,
+    groups: groupNights(nights),
     message: booking.message,
   }).catch((e) => console.error("[email] notification error:", e));
 
