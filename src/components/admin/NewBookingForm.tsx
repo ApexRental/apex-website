@@ -3,7 +3,8 @@
 import { useActionState, useMemo, useState } from "react";
 import { createBookingAction, type ActionResult } from "@/lib/actions";
 import { BOOKING_STATUSES, money } from "@/lib/format";
-import { nightlyRates, quoteFromNights, type RateMap } from "@/lib/pricing";
+import { nightlyRates, perDayRate, quoteFromNights, type RateMap } from "@/lib/pricing";
+import { DEFAULT_TIME, TIME_OPTIONS } from "@/lib/booking-options";
 import type { TaxRate } from "@/lib/taxes";
 
 type CarOption = { id: string; label: string; dailyRate: number; rates: RateMap };
@@ -22,9 +23,12 @@ export default function NewBookingForm({ cars, taxes }: { cars: CarOption[]; tax
   const rate = selected?.dailyRate ?? 0;
   const rates = selected?.rates;
 
-  const estimate = useMemo(() => {
+  const { estimate, perDay } = useMemo(() => {
     const nights = nightlyRates(rate, rates ?? {}, start, end);
-    return nights.length > 0 ? quoteFromNights(nights, taxes) : null;
+    return {
+      estimate: nights.length > 0 ? quoteFromNights(nights, taxes) : null,
+      perDay: perDayRate(rate, nights),
+    };
   }, [start, end, rate, rates, taxes]);
 
   return (
@@ -97,6 +101,15 @@ export default function NewBookingForm({ cars, taxes }: { cars: CarOption[]; tax
         </Field>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Pickup time">
+          <TimeSelect name="pickupTime" />
+        </Field>
+        <Field label="Return time">
+          <TimeSelect name="returnTime" />
+        </Field>
+      </div>
+
       <Field label="Note (optional)">
         <textarea
           name="message"
@@ -111,7 +124,7 @@ export default function NewBookingForm({ cars, taxes }: { cars: CarOption[]; tax
           <>
             <div className="flex items-center justify-between text-muted">
               <span>
-                {money(estimate.dailyRate)}{estimate.dailyRate !== rate ? " avg" : ""} × {estimate.days} day{estimate.days > 1 ? "s" : ""}
+                {money(perDay.price)}{perDay.isAverage ? " avg" : ""} × {estimate.days} day{estimate.days > 1 ? "s" : ""}
               </span>
               <span>{money(estimate.subtotal)}</span>
             </div>
@@ -139,7 +152,7 @@ export default function NewBookingForm({ cars, taxes }: { cars: CarOption[]; tax
         )}
       </div>
       <p className="text-xs text-muted/70">
-        Total includes NYC &amp; NY taxes and the service charge. No email is sent
+        Total includes the taxes &amp; fees set in Settings. No email is sent
         for manually added bookings.
       </p>
 
@@ -170,6 +183,18 @@ export default function NewBookingForm({ cars, taxes }: { cars: CarOption[]; tax
 
 const inputCls =
   "w-full rounded border border-line bg-raised px-3 py-2.5 text-sm outline-none placeholder:text-muted/50 focus:border-accent";
+
+function TimeSelect({ name }: { name: string }) {
+  return (
+    <select name={name} defaultValue={DEFAULT_TIME} className={inputCls}>
+      {TIME_OPTIONS.map((t) => (
+        <option key={t.value} value={t.value}>
+          {t.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

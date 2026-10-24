@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { money, dateShort } from "@/lib/format";
+import { money, dateShort, rentalDate } from "@/lib/format";
 import StatTile from "@/components/admin/StatTile";
 import StatusBadge from "@/components/admin/StatusBadge";
 import BookingsChart, { DayPoint } from "@/components/admin/BookingsChart";
@@ -167,7 +167,7 @@ export default async function AdminDashboard() {
                     </span>
                   </p>
                   <p className="mt-0.5 text-xs text-muted">
-                    {dateShort(b.startDate)} → {dateShort(b.endDate)} · {money(b.totalPrice)}
+                    {rentalDate(b.startDate)} → {rentalDate(b.endDate)} · {money(b.totalPrice)}
                   </p>
                 </div>
                 <StatusBadge status={b.status} />

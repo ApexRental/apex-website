@@ -9,6 +9,7 @@ import {
   BOOKING_STATUSES,
   money,
   dateShort,
+  rentalDate,
   computeQuote,
   quoteFromSubtotal,
   quoteFromLines,
@@ -94,7 +95,7 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
             )}
           </p>
           <p className="mt-0.5 text-xs text-muted">
-            {dateShort(booking.startDate)} → {dateShort(booking.endDate)} ·{" "}
+            {rentalDate(booking.startDate)} → {rentalDate(booking.endDate)} ·{" "}
             {booking.days}d · {money(booking.totalPrice)} · requested{" "}
             {dateShort(booking.createdAt)}
           </p>
@@ -132,13 +133,13 @@ export default function BookingRow({ booking }: { booking: BookingItem }) {
             <Row k="License #" v={booking.licenseNumber || "—"} />
             <Row
               k="Pick-up"
-              v={`${dateShort(booking.startDate)} · ${timeShort(booking.startDate)}${
+              v={`${rentalDate(booking.startDate)} · ${timeShort(booking.startDate)}${
                 booking.pickupLocation ? ` — ${booking.pickupLocation}` : ""
               }`}
             />
             <Row
               k="Return"
-              v={`${dateShort(booking.endDate)} · ${timeShort(booking.endDate)}${
+              v={`${rentalDate(booking.endDate)} · ${timeShort(booking.endDate)}${
                 booking.returnLocation ? ` — ${booking.returnLocation}` : ""
               }`}
             />

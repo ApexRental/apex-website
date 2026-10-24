@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { CarDTO } from "@/lib/types";
 import { money } from "@/lib/format";
-import { nightlyRates, quoteFromNights, groupNights } from "@/lib/pricing";
+import { nightlyRates, quoteFromNights, groupNights, perDayRate } from "@/lib/pricing";
 import type { TaxRate } from "@/lib/taxes";
 import {
   AREA_GROUPS,
@@ -83,6 +83,9 @@ export default function BookingModal({ car, onClose, initialDraft, taxes }: Prop
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  // total the server actually priced the booking at (may differ if prices changed meanwhile)
+  const [chargedTotal, setChargedTotal] = useState<number | null>(null);
+  const [shownTotal, setShownTotal] = useState<number | null>(null);
 
   // per-day prices for the chosen dates (custom calendar price or base rate)
   const nights = useMemo(
@@ -92,6 +95,7 @@ export default function BookingModal({ car, onClose, initialDraft, taxes }: Prop
   const days = nights.length;
   const quote = days > 0 ? quoteFromNights(nights, taxes) : null;
   const groups = groupNights(nights);
+  const perDay = perDayRate(car.dailyRate, nights);
   const resolvedReturnLoc =
     returnLocation === SAME_AS_PICKUP ? pickupLocation : returnLocation;
 
@@ -127,6 +131,8 @@ export default function BookingModal({ car, onClose, initialDraft, taxes }: Prop
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
+      setChargedTotal(typeof data.total === "number" ? data.total : null);
+      setShownTotal(quote?.total ?? null);
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -160,6 +166,18 @@ export default function BookingModal({ car, onClose, initialDraft, taxes }: Prop
               . We&apos;ll call or email shortly to confirm availability and
               arrange delivery.
             </p>
+            {chargedTotal !== null && (
+              <p className="mx-auto mt-4 max-w-sm text-sm text-muted">
+                Your total:{" "}
+                <span className="font-display font-bold text-fg">{money(chargedTotal)}</span>{" "}
+                incl. taxes &amp; fees
+                {shownTotal !== null && Math.abs(shownTotal - chargedTotal) >= 0.01 && (
+                  <span className="mt-1 block text-xs">
+                    Prices were updated while you were booking — this is the current total.
+                  </span>
+                )}
+              </p>
+            )}
             <button onClick={onClose} className="btn btn-primary mt-8 px-8 py-3 text-sm">
               Done
             </button>
@@ -176,7 +194,7 @@ export default function BookingModal({ car, onClose, initialDraft, taxes }: Prop
                   <span className="font-medium text-muted">{car.year}</span>
                 </h3>
                 <p className="mt-1 text-sm text-muted">
-                  {money(car.dailyRate)}/day · deposit up to {money(car.deposit)}
+                  {money(perDay.price)}/day{perDay.isAverage ? " avg for your dates" : ""} · deposit up to {money(car.deposit)}
                 </p>
               </div>
               <button

@@ -53,6 +53,7 @@ export default async function RatesPage({
         </p>
       </div>
       <RateCalendar
+        key={selected.id}
         cars={cars.map((c) => ({ id: c.id, name: name(c) }))}
         car={{ id: selected.id, name: name(selected), dailyRate: selected.dailyRate }}
         month={month}

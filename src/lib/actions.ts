@@ -17,7 +17,8 @@ import {
 import { setSetting, getSettings } from "./settings";
 import { validateTaxes } from "./taxes";
 import { BOOKING_STATUSES } from "./format";
-import { nightlyRates, quoteFromNights, rentalRangeError } from "./pricing";
+import { nightlyRates, quoteFromNights, rentalRangeError, isCalendarDate } from "./pricing";
+import { DEFAULT_TIME, isValidTime } from "./booking-options";
 import { getRateMap } from "./rates";
 
 async function requireAuth() {
@@ -108,6 +109,10 @@ export async function createBookingAction(
   const licenseNumber = String(formData.get("licenseNumber") ?? "").trim();
   const startStr = String(formData.get("startDate") ?? "");
   const endStr = String(formData.get("endDate") ?? "");
+  const pickupTimeInput = String(formData.get("pickupTime") ?? "");
+  const returnTimeInput = String(formData.get("returnTime") ?? "");
+  const pickupTime = isValidTime(pickupTimeInput) ? pickupTimeInput : DEFAULT_TIME;
+  const returnTime = isValidTime(returnTimeInput) ? returnTimeInput : DEFAULT_TIME;
   const message = String(formData.get("message") ?? "").trim();
   const statusInput = String(formData.get("status") ?? "CONFIRMED");
   const status = (BOOKING_STATUSES as readonly string[]).includes(statusInput)
@@ -119,14 +124,14 @@ export async function createBookingAction(
   if (phone.length < 5) return { ok: false, error: "Enter a contact phone number." };
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
     return { ok: false, error: "That email address looks invalid." };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(startStr) || !/^\d{4}-\d{2}-\d{2}$/.test(endStr))
-    return { ok: false, error: "Pick both a pickup and a return date." };
-
-  const start = new Date(`${startStr}T00:00:00`);
-  const end = new Date(`${endStr}T00:00:00`);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
+  if (!startStr || !endStr) return { ok: false, error: "Pick both a pickup and a return date." };
+  if (!isCalendarDate(startStr) || !isCalendarDate(endStr))
     return { ok: false, error: "Those dates aren't valid." };
-  if (end <= start)
+
+  // stored as UTC wall-clock (like website bookings) so the day and hour never drift
+  const start = new Date(`${startStr}T${pickupTime}:00Z`);
+  const end = new Date(`${endStr}T${returnTime}:00Z`);
+  if (endStr <= startStr)
     return { ok: false, error: "The return date must be after the pickup date." };
   const rangeError = rentalRangeError(startStr, endStr);
   if (rangeError) return { ok: false, error: rangeError };

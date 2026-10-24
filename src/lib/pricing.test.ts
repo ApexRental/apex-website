@@ -6,11 +6,13 @@ import {
   groupNights,
   quoteFromNights,
   displayRate,
+  perDayRate,
+  isCalendarDate,
   expandRange,
   planRateChange,
   rentalRangeError,
 } from "./pricing";
-import { computeQuote, quoteFromSubtotal, quoteFromLines } from "./format";
+import { computeQuote, quoteFromSubtotal, quoteFromLines, rentalDate } from "./format";
 
 test("billable days exclude the return day", () =>
   assert.deepEqual(billableDates("2026-10-27", "2026-10-30"), ["2026-10-27", "2026-10-28", "2026-10-29"]));
@@ -125,4 +127,43 @@ test("default taxes keep the exact pre-Settings rounding (legacy bookings)", () 
 test("pinned legacy examples", () => {
   assert.deepEqual(computeQuote(60, 1).lines.map((l) => l.amount), [5.32, 7.2, 3.54]);
   assert.equal(computeQuote(55, 1).lines[2].amount, 3.24);
+});
+
+test("planRateChange rounds the price before checking the limits", () => {
+  assert.deepEqual(
+    planRateChange({ from: "2026-11-02", to: "2026-11-02", weekdays: [1], price: 10000.004 }, "2026-10-24"),
+    { dates: ["2026-11-02"], price: 10000 }
+  );
+  assert.deepEqual(
+    planRateChange({ from: "2026-11-02", to: "2026-11-02", weekdays: [1], price: 10000.01 }, "2026-10-24"),
+    { error: "Price must be between $1 and $10,000." }
+  );
+});
+
+test("impossible calendar dates are not dates", () => {
+  assert.equal(isCalendarDate("2026-02-28"), true);
+  assert.equal(isCalendarDate("2028-02-29"), true);
+  assert.equal(isCalendarDate("2026-02-29"), false);
+  assert.equal(isCalendarDate("2026-02-30"), false);
+  assert.equal(isCalendarDate("2026-13-01"), false);
+  assert.equal(isCalendarDate("2026-1-01"), false);
+  assert.deepEqual(billableDates("2026-02-30", "2026-03-02"), []);
+});
+
+test("perDayRate: a single price is shown as-is, mixed prices as an average", () => {
+  assert.deepEqual(perDayRate(100, []), { price: 100, isAverage: false });
+  assert.deepEqual(perDayRate(100, [{ date: "2026-11-01", price: 180 }, { date: "2026-11-02", price: 180 }]), { price: 180, isAverage: false });
+  assert.deepEqual(perDayRate(100, [{ date: "2026-11-01", price: 100 }, { date: "2026-11-02", price: 150 }, { date: "2026-11-03", price: 100 }]), { price: 116.67, isAverage: true });
+  assert.deepEqual(displayRate(100, {}, "2026-10-27", "2026-10-30"), { price: 100, isAverage: false });
+});
+
+test("rentalDate shows the stored calendar day in any server/browser timezone", () => {
+  const tz = process.env.TZ;
+  process.env.TZ = "America/New_York";
+  try {
+    assert.equal(rentalDate("2026-11-29T00:00:00.000Z"), "Nov 29, 2026");
+    assert.equal(rentalDate(new Date("2026-12-03T10:00:00.000Z")), "Dec 3, 2026");
+  } finally {
+    process.env.TZ = tz;
+  }
 });

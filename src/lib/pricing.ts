@@ -24,7 +24,13 @@ const MAX_PRICE = 10_000;
 /** Longest rental that can be booked online (and the furthest-ahead pickup). */
 export const MAX_RENTAL_DAYS = 365;
 
-const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+/** A real "YYYY-MM-DD" calendar day (rejects 2026-02-30, 2026-13-01, …). */
+export function isCalendarDate(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+const isDate = isCalendarDate;
 
 /**
  * Guard a requested rental before pricing it day by day: at most
@@ -68,16 +74,24 @@ export function quoteFromNights(nights: Night[], taxes: TaxRate[] = DEFAULT_TAXE
   return quoteFromSubtotal(subtotal, nights.length, taxes);
 }
 
-/** Price to show on a car card: the average for chosen dates, else the base. */
+/**
+ * Per-day price to show for a set of nights: the base when there are none,
+ * the one price when every day costs the same, else the average.
+ */
+export function perDayRate(base: number, nights: Night[]): { price: number; isAverage: boolean } {
+  if (nights.length === 0) return { price: base, isAverage: false };
+  if (nights.every((n) => n.price === nights[0].price)) return { price: nights[0].price, isAverage: false };
+  return { price: quoteFromNights(nights).dailyRate, isAverage: true };
+}
+
+/** Price to show on a car card for the chosen dates (see perDayRate). */
 export function displayRate(
   base: number,
   rates: RateMap,
   startDate: string,
   endDate: string
 ): { price: number; isAverage: boolean } {
-  const nights = nightlyRates(base, rates, startDate, endDate);
-  if (nights.length === 0) return { price: base, isAverage: false };
-  return { price: quoteFromNights(nights).dailyRate, isAverage: true };
+  return perDayRate(base, nightlyRates(base, rates, startDate, endDate));
 }
 
 /** Every day from `from` to `to` (both inclusive) whose weekday (0 = Sun) is listed. */
@@ -110,10 +124,10 @@ export function planRateChange(
 
   let price: number | undefined;
   if (input.price !== undefined) {
-    if (!Number.isFinite(input.price) || input.price < MIN_PRICE || input.price > MAX_PRICE) {
+    price = round2(input.price);
+    if (!Number.isFinite(price) || price < MIN_PRICE || price > MAX_PRICE) {
       return { error: "Price must be between $1 and $10,000." };
     }
-    price = round2(input.price);
   }
 
   const dates = expandRange(from, to, weekdays);

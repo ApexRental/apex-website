@@ -60,7 +60,11 @@ export default function RateCalendar({ cars, car, month, rates, today }: Props) 
 
   const cells = useMemo(() => monthCells(month), [month]);
   const [y, m] = month.split("-").map(Number);
-  const go = (carId: string, toMonth: string) => router.push(`/admin/rates?car=${carId}&month=${toMonth}`);
+  // the page remounts this component per car (key), so a month switch only clears the message
+  const go = (carId: string, toMonth: string) => {
+    setResult(null);
+    router.push(`/admin/rates?car=${carId}&month=${toMonth}`);
+  };
 
   const selectedCount = from && to ? expandRange(from, to, weekdays).length : 0;
   const isSelected = (d: string) => !!from && !!to && d >= from && d <= to && weekdays.includes(weekdayOf(d));

@@ -35,3 +35,20 @@ test("describeTaxes", () => {
   assert.equal(describeTaxes([{ label: "City tax", rate: 10 }]), "City tax (10%)");
   assert.equal(describeTaxes([]), "");
 });
+
+test("validateTaxes rejects rows that are not objects", () => {
+  assert.deepEqual(validateTaxes([null] as never), { error: "Each tax needs a name (up to 40 characters)." });
+  assert.deepEqual(validateTaxes([42, "x"] as never), { error: "Each tax needs a name (up to 40 characters)." });
+});
+
+test("parseStoredTaxes falls back to the defaults for malformed rows", () => {
+  assert.deepEqual(parseStoredTaxes("[null]"), DEFAULT_TAXES);
+  assert.deepEqual(parseStoredTaxes('[{"label":"A"}]'), DEFAULT_TAXES);
+});
+
+test("validateTaxes rejects duplicate names (ignoring case and spaces)", () => {
+  assert.deepEqual(
+    validateTaxes([{ label: "Fee", rate: 1 }, { label: " fee ", rate: 2 }]),
+    { error: "Each tax needs a different name." }
+  );
+});

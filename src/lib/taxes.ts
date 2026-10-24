@@ -26,9 +26,14 @@ export function validateTaxes(
   rows: { label: string; rate: number }[]
 ): { taxes: TaxRate[] } | { error: string } {
   if (rows.length > MAX_TAXES) return { error: "Up to 10 taxes." };
-  const labels = rows.map((r) => (typeof r.label === "string" ? r.label.trim() : ""));
+  // stored JSON may hold anything — treat a non-object row as a nameless one
+  const isRow = (r: unknown): r is { label: unknown; rate: unknown } => typeof r === "object" && r !== null;
+  const labels = rows.map((r) => (isRow(r) && typeof r.label === "string" ? r.label.trim() : ""));
   if (labels.some((l) => l.length === 0 || l.length > MAX_LABEL)) {
     return { error: "Each tax needs a name (up to 40 characters)." };
+  }
+  if (new Set(labels.map((l) => l.toLowerCase())).size < labels.length) {
+    return { error: "Each tax needs a different name." };
   }
   if (rows.some((r) => typeof r.rate !== "number" || !Number.isFinite(r.rate) || r.rate < 0 || r.rate > 100)) {
     return { error: "Each rate must be between 0% and 100%." };

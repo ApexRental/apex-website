@@ -16,6 +16,20 @@ export function dateShort(d: Date | string): string {
   });
 }
 
+/**
+ * Date of a rental pickup/return. Those are stored as UTC wall-clock times
+ * ("…T10:00:00Z" = 10 AM), so read them in UTC or a New York browser shows
+ * the day before.
+ */
+export function rentalDate(d: Date | string): string {
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 export function daysBetween(start: Date, end: Date): number {
   const ms = end.getTime() - start.getTime();
   return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24)));

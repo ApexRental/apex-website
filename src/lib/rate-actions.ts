@@ -53,10 +53,21 @@ export async function applyRatesAction(input: {
   const finalPrice = plan.price ?? price;
 
   const dates = plan.dates.map(dayStart);
-  await prisma.$transaction([
-    prisma.carRate.deleteMany({ where: { carId, date: { in: dates } } }),
-    prisma.carRate.createMany({ data: dates.map((date) => ({ carId, date, price: finalPrice })) }),
-  ]);
+  try {
+    // skipDuplicates + updateMany: two overlapping saves (e.g. a double click)
+    // can't hit the unique (carId, date) index — the last save wins instead
+    await prisma.$transaction([
+      prisma.carRate.deleteMany({ where: { carId, date: { in: dates } } }),
+      prisma.carRate.createMany({
+        data: dates.map((date) => ({ carId, date, price: finalPrice })),
+        skipDuplicates: true,
+      }),
+      prisma.carRate.updateMany({ where: { carId, date: { in: dates } }, data: { price: finalPrice } }),
+    ]);
+  } catch (e) {
+    console.error("[rates] apply failed:", e);
+    return { ok: false, error: "Couldn't save the prices. Please try again." };
+  }
 
   revalidateRates();
   return { ok: true, message: `Saved ${money(finalPrice)}/day for ${dayCount(plan.dates.length)}.` };
@@ -79,7 +90,12 @@ export async function clearRatesAction(input: {
   const plan = planRateChange({ from, to, weekdays }, todayNY());
   if ("error" in plan) return { ok: false, error: plan.error };
 
-  await prisma.carRate.deleteMany({ where: { carId, date: { in: plan.dates.map(dayStart) } } });
+  try {
+    await prisma.carRate.deleteMany({ where: { carId, date: { in: plan.dates.map(dayStart) } } });
+  } catch (e) {
+    console.error("[rates] reset failed:", e);
+    return { ok: false, error: "Couldn't reset the prices. Please try again." };
+  }
 
   revalidateRates();
   return { ok: true, message: `Reset ${dayCount(plan.dates.length)} to the base rate.` };

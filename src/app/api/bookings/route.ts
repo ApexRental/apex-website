@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { nightlyRates, quoteFromNights, groupNights, rentalRangeError } from "@/lib/pricing";
+import { nightlyRates, quoteFromNights, groupNights, rentalRangeError, isCalendarDate } from "@/lib/pricing";
 import { getRateMap } from "@/lib/rates";
 import { getSettings } from "@/lib/settings";
 import { formatTime, isValidTime, DEFAULT_TIME, todayNY, isDeliveryArea } from "@/lib/booking-options";
@@ -14,8 +14,8 @@ const bookingSchema = z.object({
   phone: z.string().min(5).max(40),
   email: z.string().email().max(160),
   licenseNumber: z.string().max(80).optional(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  startDate: z.string().refine(isCalendarDate),
+  endDate: z.string().refine(isCalendarDate),
   pickupTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   returnTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   // delivery-only: must be one of the listed NY & NJ areas
@@ -155,5 +155,6 @@ export async function POST(request: Request) {
     message: booking.message,
   }).catch((e) => console.error("[email] notification error:", e));
 
-  return NextResponse.json({ ok: true, bookingId: booking.id }, { status: 201 });
+  // the total actually charged, so the customer sees it even if prices changed mid-booking
+  return NextResponse.json({ ok: true, bookingId: booking.id, total: quote.total }, { status: 201 });
 }
