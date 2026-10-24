@@ -106,24 +106,32 @@ export default function Footer({
           </p>
           <span className="flex items-center gap-2 text-muted/60">
             <span>powered by</span>
-            {/* white logo on the dark theme, black logo on the light theme */}
-            <Image
-              src="/onpoint-dark.png"
-              alt="On Point Analytics"
-              width={515}
-              height={513}
-              className="onpoint-on-dark h-5 w-auto"
-            />
-            <Image
-              src="/onpoint-light.png"
-              alt="On Point Analytics"
-              width={513}
-              height={504}
-              className="onpoint-on-light h-5 w-auto"
-            />
-            <span className="font-semibold tracking-wide text-muted">
-              On Point Analytics
-            </span>
+            <a
+              href="https://onpointanalysis.com/"
+              target="_blank"
+              rel="noopener"
+              className="group flex items-center gap-2"
+            >
+              {/* white logo on the dark theme, black logo on the light theme; alt is
+                  empty because the link text below already names the company */}
+              <Image
+                src="/onpoint-dark.png"
+                alt=""
+                width={515}
+                height={513}
+                className="onpoint-on-dark h-5 w-auto"
+              />
+              <Image
+                src="/onpoint-light.png"
+                alt=""
+                width={513}
+                height={504}
+                className="onpoint-on-light h-5 w-auto"
+              />
+              <span className="font-semibold tracking-wide text-muted transition-colors group-hover:text-fg">
+                On Point Analytics
+              </span>
+            </a>
           </span>
         </div>
       </div>
