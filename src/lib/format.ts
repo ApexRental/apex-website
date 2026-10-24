@@ -46,12 +46,12 @@ export type Quote = {
 };
 
 /**
- * Build a full price breakdown from a daily rate and number of days.
+ * Build a full price breakdown from a rental subtotal (before tax).
  * Each tax/fee line is rounded to cents; the grand total is subtotal + the
- * rounded lines, so the numbers shown always add up exactly.
+ * rounded lines, so the numbers shown always add up exactly. `dailyRate` is
+ * the average per day.
  */
-export function computeQuote(dailyRate: number, days: number): Quote {
-  const subtotal = round2(dailyRate * days);
+export function quoteFromSubtotal(subtotal: number, days: number): Quote {
   const lines: QuoteLine[] = TAX_LINES.map((t) => ({
     label: t.label,
     note: t.note,
@@ -59,7 +59,13 @@ export function computeQuote(dailyRate: number, days: number): Quote {
   }));
   const taxTotal = round2(lines.reduce((s, l) => s + l.amount, 0));
   const total = round2(subtotal + taxTotal);
+  const dailyRate = days > 0 ? round2(subtotal / days) : 0;
   return { dailyRate, days, subtotal, lines, taxTotal, total };
+}
+
+/** Quote for a flat daily rate (every day the same price). */
+export function computeQuote(dailyRate: number, days: number): Quote {
+  return { ...quoteFromSubtotal(round2(dailyRate * days), days), dailyRate };
 }
 
 export const CATEGORIES = [

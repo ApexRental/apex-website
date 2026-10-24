@@ -1,0 +1,77 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import {
+  billableDates,
+  nightlyRates,
+  groupNights,
+  quoteFromNights,
+  displayRate,
+  expandRange,
+  planRateChange,
+} from "./pricing";
+import { computeQuote } from "./format";
+
+test("billable days exclude the return day", () =>
+  assert.deepEqual(billableDates("2026-10-27", "2026-10-30"), ["2026-10-27", "2026-10-28", "2026-10-29"]));
+
+test("month end + DST change bills 3 days", () =>
+  assert.deepEqual(billableDates("2026-10-31", "2026-11-03"), ["2026-10-31", "2026-11-01", "2026-11-02"]));
+
+test("same or reversed dates bill nothing", () => {
+  assert.deepEqual(billableDates("2026-10-27", "2026-10-27"), []);
+  assert.deepEqual(billableDates("2026-10-30", "2026-10-27"), []);
+});
+
+test("custom price applies only to its day", () =>
+  assert.deepEqual(
+    nightlyRates(100, { "2026-10-28": 150 }, "2026-10-27", "2026-10-30").map((n) => n.price),
+    [100, 150, 100]
+  ));
+
+test("price on the return date is ignored", () =>
+  assert.equal(quoteFromNights(nightlyRates(100, { "2026-10-30": 999 }, "2026-10-27", "2026-10-30")).total, 380.33));
+
+test("no custom prices equals computeQuote", () =>
+  assert.deepEqual(quoteFromNights(nightlyRates(100, {}, "2026-10-27", "2026-10-30")), computeQuote(100, 3)));
+
+test("mixed quote", () => {
+  const q = quoteFromNights(nightlyRates(100, { "2026-10-28": 150 }, "2026-10-27", "2026-10-30"));
+  assert.equal(q.subtotal, 350);
+  assert.deepEqual(q.lines.map((l) => l.amount), [31.06, 42, 20.65]);
+  assert.equal(q.taxTotal, 93.71);
+  assert.equal(q.total, 443.71);
+  assert.equal(q.dailyRate, 116.67);
+  assert.equal(q.days, 3);
+});
+
+test("groups keep first-appearance order", () =>
+  assert.deepEqual(
+    groupNights([{ date: "a", price: 100 }, { date: "b", price: 150 }, { date: "c", price: 100 }]),
+    [{ price: 100, count: 2 }, { price: 150, count: 1 }]
+  ));
+
+test("displayRate", () => {
+  assert.deepEqual(displayRate(100, { "2026-10-28": 150 }, "", ""), { price: 100, isAverage: false });
+  assert.deepEqual(displayRate(100, { "2026-10-28": 150 }, "2026-10-27", "2026-10-30"), { price: 116.67, isAverage: true });
+  assert.deepEqual(displayRate(100, {}, "2026-10-30", "2026-10-27"), { price: 100, isAverage: false });
+});
+
+test("expandRange weekday filter, inclusive", () => {
+  assert.deepEqual(expandRange("2026-12-01", "2026-12-07", [5, 6, 0]), ["2026-12-04", "2026-12-05", "2026-12-06"]);
+  assert.equal(expandRange("2026-12-01", "2026-12-03", [0, 1, 2, 3, 4, 5, 6]).length, 3);
+  assert.deepEqual(expandRange("2026-12-03", "2026-12-01", [0, 1, 2, 3, 4, 5, 6]), []);
+});
+
+test("planRateChange validation", () => {
+  const T = "2026-10-24";
+  const all = [0, 1, 2, 3, 4, 5, 6];
+  assert.deepEqual(planRateChange({ from: "2026-11-02", to: "2026-11-01", weekdays: all, price: 100 }, T), { error: "End date must be on or after the start date." });
+  assert.deepEqual(planRateChange({ from: "2026-11-01", to: "2027-11-05", weekdays: all, price: 100 }, T), { error: "Pick a range of 366 days or less." });
+  assert.deepEqual(planRateChange({ from: "2026-11-01", to: "2026-11-02", weekdays: [], price: 100 }, T), { error: "Select at least one day of the week." });
+  assert.deepEqual(planRateChange({ from: "2026-11-01", to: "2026-11-02", weekdays: all, price: 0 }, T), { error: "Price must be between $1 and $10,000." });
+  assert.deepEqual(planRateChange({ from: "2026-11-01", to: "2026-11-02", weekdays: all, price: Number.NaN }, T), { error: "Price must be between $1 and $10,000." });
+  assert.deepEqual(planRateChange({ from: "2026-10-20", to: "2026-10-22", weekdays: all, price: 100 }, T), { error: "All selected days are in the past." });
+  assert.deepEqual(planRateChange({ from: "2026-10-23", to: "2026-10-25", weekdays: all, price: 99.999 }, T), { dates: ["2026-10-24", "2026-10-25"], price: 100 });
+  assert.deepEqual(planRateChange({ from: "2027-10-20", to: "2027-10-30", weekdays: all, price: 100 }, T), { error: "Prices can be set up to one year ahead." });
+  assert.deepEqual(planRateChange({ from: "2026-11-01", to: "2026-11-02", weekdays: all }, T), { dates: ["2026-11-01", "2026-11-02"] });
+});
