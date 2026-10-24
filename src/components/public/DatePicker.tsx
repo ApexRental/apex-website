@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { monthToShow } from "@/lib/date-view";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
@@ -55,9 +56,11 @@ export default function DatePicker({
   );
   const ref = useRef<HTMLDivElement>(null);
 
+  // follow the selection, or jump ahead when the earliest allowed day moves
+  // into a later month (e.g. a return date after a pickup next month)
   useEffect(() => {
-    if (selected) setView(selected);
-  }, [selected]);
+    setView((v) => monthToShow(v, selected, minDate));
+  }, [selected, minDate]);
 
   useEffect(() => {
     if (!open) return;
