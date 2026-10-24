@@ -8,6 +8,7 @@ import {
   displayRate,
   expandRange,
   planRateChange,
+  rentalRangeError,
 } from "./pricing";
 import { computeQuote, quoteFromSubtotal, quoteFromLines } from "./format";
 
@@ -97,4 +98,15 @@ test("quoteFromLines keeps stored lines", () => {
   assert.equal(q.taxTotal, 28);
   assert.equal(q.total, 378);
   assert.equal(q.dailyRate, 116.67);
+});
+
+test("rentalRangeError caps online rentals at 365 days", () => {
+  assert.equal(rentalRangeError("2026-11-01", "2027-11-01"), null); // exactly 365 days
+  assert.equal(rentalRangeError("2026-11-01", "2027-11-02"), "Online bookings are limited to 365 days. Please call us for longer rentals.");
+  assert.equal(rentalRangeError("2026-11-01", "9999-12-31"), "Online bookings are limited to 365 days. Please call us for longer rentals.");
+});
+
+test("rentalRangeError limits how far ahead a pickup can be", () => {
+  assert.equal(rentalRangeError("2027-10-24", "2027-10-26", "2026-10-24"), null); // today + 365
+  assert.equal(rentalRangeError("2027-10-25", "2027-10-26", "2026-10-24"), "Pickup can be booked up to one year ahead.");
 });

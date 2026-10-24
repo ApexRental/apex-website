@@ -17,7 +17,7 @@ import {
 import { setSetting, getSettings } from "./settings";
 import { validateTaxes } from "./taxes";
 import { BOOKING_STATUSES } from "./format";
-import { nightlyRates, quoteFromNights } from "./pricing";
+import { nightlyRates, quoteFromNights, rentalRangeError } from "./pricing";
 import { getRateMap } from "./rates";
 
 async function requireAuth() {
@@ -128,6 +128,8 @@ export async function createBookingAction(
     return { ok: false, error: "Those dates aren't valid." };
   if (end <= start)
     return { ok: false, error: "The return date must be after the pickup date." };
+  const rangeError = rentalRangeError(startStr, endStr);
+  if (rangeError) return { ok: false, error: rangeError };
 
   const car = await prisma.car.findUnique({ where: { id: carId } });
   if (!car) return { ok: false, error: "That vehicle no longer exists." };

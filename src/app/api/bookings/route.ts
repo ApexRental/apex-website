@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { nightlyRates, quoteFromNights, groupNights } from "@/lib/pricing";
+import { nightlyRates, quoteFromNights, groupNights, rentalRangeError } from "@/lib/pricing";
 import { getRateMap } from "@/lib/rates";
 import { getSettings } from "@/lib/settings";
 import { formatTime, isValidTime, DEFAULT_TIME, todayNY } from "@/lib/booking-options";
@@ -75,6 +75,10 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+
+  // cap the length before pricing it day by day (keeps one request cheap)
+  const rangeError = rentalRangeError(data.startDate, data.endDate, todayStr);
+  if (rangeError) return NextResponse.json({ error: rangeError }, { status: 400 });
 
   const start = new Date(`${data.startDate}T${pickupTime}:00Z`);
   const end = new Date(`${data.endDate}T${returnTime}:00Z`);

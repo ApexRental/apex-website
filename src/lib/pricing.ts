@@ -21,7 +21,25 @@ const MAX_DAYS_AHEAD = 365;
 const MIN_PRICE = 1;
 const MAX_PRICE = 10_000;
 
+/** Longest rental that can be booked online (and the furthest-ahead pickup). */
+export const MAX_RENTAL_DAYS = 365;
+
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+/**
+ * Guard a requested rental before pricing it day by day: at most
+ * MAX_RENTAL_DAYS long and, when `today` is given, starting no more than a
+ * year ahead. Constant-time — never walks the range.
+ */
+export function rentalRangeError(startDate: string, endDate: string, today?: string): string | null {
+  if (endDate > addDays(startDate, MAX_RENTAL_DAYS)) {
+    return "Online bookings are limited to 365 days. Please call us for longer rentals.";
+  }
+  if (today && startDate > addDays(today, MAX_DAYS_AHEAD)) {
+    return "Pickup can be booked up to one year ahead.";
+  }
+  return null;
+}
 const weekdayOf = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay();
 
 /** Every billable day from startDate (inclusive) to endDate (exclusive). */
